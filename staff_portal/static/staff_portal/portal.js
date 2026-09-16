@@ -28,7 +28,7 @@
       const copy = document.createElement("template");
       copy.innerHTML = template.innerHTML.replaceAll("__prefix__", index).replaceAll("__number__", index + 1);
       const row = copy.content.querySelector("[data-entry-row]");
-      document.getElementById("entry-rows").appendChild(copy.content);
+      document.getElementById("entry-rows").appendChild(row);
       total.value = index + 1;
       row.querySelector('select[name$="-date"]').focus();
       announcement.textContent = "Row " + (index + 1) + " added. Choose its date to begin.";

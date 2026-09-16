@@ -8,13 +8,21 @@
 {% for row in editor %}{% if not row.DELETE.value %}{% for error in row.non_field_errors %}<li><a href="#{{ row.date.id_for_label }}">Row {{ forloop.parentloop.counter }}: {{ error }}</a></li>{% endfor %}{% for field in row %}{% for error in field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>{% endfor %}{% endfor %}{% endif %}{% endfor %}
 </ul></div>{% endif %}
 <section class="panel month-editor-panel" aria-labelledby="editor-heading">
-  <div class="section-heading"><div><h2 id="editor-heading">Your month, on one page</h2><p id="entry-help">Choose a date and work type, then add your times and purpose. UK local time. Leave unused rows blank.<br>Purpose is optional. Keep family names and sensitive care details out of your timesheet.</p></div><span class="editor-tag">ONE ROW PER SHIFT</span></div>
-  <div class="entry-columns" aria-hidden="true"><span>Date</span><span>Work type</span><span>Start</span><span>Finish</span><span>Break (min)</span><span>Purpose</span></div>
-  <div id="entry-rows">
-  {% for row in editor %}{% include 'staff_portal/bulk_row.html' with number=forloop.counter %}{% endfor %}
+  <div class="section-heading"><div><h2 id="editor-heading">Work completed</h2><p id="entry-help">One horizontal row per shift. Use UK local times and leave unused rows blank. Purpose is optional; keep family names and sensitive care details out.</p></div><span class="editor-tag">{{ sheet.month|date:"F Y" }}</span></div>
+  <p class="grid-scroll-hint" id="grid-scroll-help"><span aria-hidden="true">↔</span> Swipe sideways to see every column. On a keyboard, focus the table and use the arrow keys.</p>
+  <div class="entry-table-scroll" tabindex="0" role="region" aria-label="Timesheet entry grid" aria-describedby="grid-scroll-help">
+    <table class="entry-table">
+      <caption class="sr-only">Enter shifts for {{ sheet.month|date:"F Y" }}, one row per shift</caption>
+      <colgroup><col class="col-number"><col class="col-date"><col class="col-category"><col class="col-time"><col class="col-time"><col class="col-break"><col class="col-purpose"><col class="col-options"><col class="col-remove"></colgroup>
+      <thead><tr><th scope="col">Row</th><th scope="col" class="date-cell">Date</th><th scope="col">Work type</th><th scope="col">Start</th><th scope="col">Finish</th><th scope="col">Break (min)</th><th scope="col">Purpose <span class="column-optional">(optional)</span></th><th scope="col">Shift options</th><th scope="col">Remove</th></tr></thead>
+      <tbody id="entry-rows">
+      {% for row in editor %}{% include 'staff_portal/bulk_row.html' with number=forloop.counter %}{% endfor %}
+      </tbody>
+    </table>
   </div>
+  <div class="editor-total"><span>Saved total</span><strong>{{ sheet.total_display }}</strong><small>Updates when you save</small></div>
   <div class="editor-add"><button type="submit" name="action" value="add_rows" class="button secondary" id="add-row">＋ Add another row</button><p class="help" id="row-announcement" role="status" aria-live="polite">Changes are saved when you choose Save draft or Submit timesheet.</p></div>
 </section>
-<template id="empty-entry-row">{% include 'staff_portal/bulk_row.html' with row=editor.empty_form number='__number__' %}</template>
+<template id="empty-entry-row"><table><tbody>{% include 'staff_portal/bulk_row.html' with row=editor.empty_form number='__number__' %}</tbody></table></template>
 <div class="editor-footer no-print"><div><strong>Finished for now?</strong><p>Save to continue later, or submit all rows for review. Submitted entries will be locked.</p></div><div class="actions"><button class="button secondary" name="action" value="save">Save draft</button><button class="button primary" name="action" value="submit" data-submit-month>Submit timesheet →</button></div></div>
 </form>

@@ -1,22 +1,27 @@
-<fieldset class="entry-row{% if row.DELETE.value %} pending-removal{% endif %}" data-entry-row>
-<legend><span data-row-number>Row {{ number }}</span></legend>
-{{ row.entry_id }}
-{% if row.non_field_errors %}<ul class="field-errors row-error" id="{{ row.prefix }}-errors">{% for error in row.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-<div class="entry-grid">
-  {% include 'staff_portal/row_field.html' with field=row.date %}
-  {% include 'staff_portal/row_field.html' with field=row.category %}
-  {% include 'staff_portal/row_field.html' with field=row.start_time %}
-  {% include 'staff_portal/row_field.html' with field=row.end_time %}
-  {% include 'staff_portal/row_field.html' with field=row.break_minutes %}
-  {% include 'staff_portal/row_field.html' with field=row.notes %}
-</div>
-<div class="row-bottom">
-  <details class="row-options" {% if row.end_date.value or row.start_fold.value == 1 or row.start_fold.value == '1' or row.end_fold.value == 1 or row.end_fold.value == '1' or row.end_date.errors or row.start_fold.errors or row.end_fold.errors %}open{% endif %}><summary>Overnight shift / clock changes</summary><p class="help">Leave finish date blank for the same day. For an overnight shift, choose its finish date. Only change the occurrence when UK clocks go back.</p><div class="row-extra">
-    {% include 'staff_portal/row_field.html' with field=row.end_date %}
-    {% include 'staff_portal/row_field.html' with field=row.start_fold %}
-    {% include 'staff_portal/row_field.html' with field=row.end_fold %}
-  </div></details>
-  <label class="remove-row" for="{{ row.DELETE.id_for_label }}">{{ row.DELETE }}<span>Remove row {{ number }}</span></label>
-</div>
-<p class="removal-note" {% if not row.DELETE.value %}hidden{% endif %}>This row will be removed when you save. Untick Remove to keep it.</p>
-</fieldset>
+<tr class="entry-row{% if row.DELETE.value %} pending-removal{% endif %}" data-entry-row>
+  <th scope="row" class="row-number"><span class="sr-only">Row </span><span data-row-number>{{ number }}</span>{{ row.entry_id }}</th>
+  <td class="date-cell">
+    {% include 'staff_portal/row_field.html' with field=row.date %}
+    {% if row.non_field_errors %}<ul class="field-errors row-error" id="{{ row.prefix }}-errors">{% for error in row.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+  </td>
+  <td>{% include 'staff_portal/row_field.html' with field=row.category %}</td>
+  <td>{% include 'staff_portal/row_field.html' with field=row.start_time %}</td>
+  <td>{% include 'staff_portal/row_field.html' with field=row.end_time %}</td>
+  <td>{% include 'staff_portal/row_field.html' with field=row.break_minutes %}</td>
+  <td>
+    {% include 'staff_portal/row_field.html' with field=row.notes %}
+    <p class="removal-note" {% if not row.DELETE.value %}hidden{% endif %}>Marked for removal. Untick Remove to keep this row.</p>
+  </td>
+  <td class="row-options-cell">
+    <details class="row-options" {% if row.end_date.value or row.start_fold.value == 1 or row.start_fold.value == '1' or row.end_fold.value == 1 or row.end_fold.value == '1' or row.end_date.errors or row.start_fold.errors or row.end_fold.errors %}open{% endif %}>
+      <summary>More<span class="sr-only"> options for row {{ number }}: overnight shift and clock changes</span></summary>
+      <p class="help">For overnight work, choose the finish date. Only change the occurrence when UK clocks go back.</p>
+      <div class="row-extra">
+        {% include 'staff_portal/row_field.html' with field=row.end_date %}
+        {% include 'staff_portal/row_field.html' with field=row.start_fold %}
+        {% include 'staff_portal/row_field.html' with field=row.end_fold %}
+      </div>
+    </details>
+  </td>
+  <td class="row-remove-cell"><label class="remove-row" for="{{ row.DELETE.id_for_label }}">{{ row.DELETE }}<span class="sr-only">Remove row {{ number }}</span></label></td>
+</tr>

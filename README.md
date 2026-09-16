@@ -8,7 +8,9 @@ no copied Git history, no real staff roster, no payroll database and no Mailjet 
 
 1. Open the hosted link on a phone, tablet or computer.
 2. Choose **Employee** and enter the private review code shared by the project owner.
-3. Open the current month. Add rows with date, work type, start/finish, break and purpose.
+3. Open the current month. Enter each shift in a horizontal row with date, work type,
+   start/finish, break and purpose. On a phone, swipe across the grid; the date stays
+   visible. The saved total and save/submit controls stay below the grid.
 4. Save a draft or submit the complete timesheet in one action.
 5. Use **Switch view → Finance** to review, return or approve another demo user's sheet.
 6. Export a summary or detailed CSV, or print/save a PDF.
