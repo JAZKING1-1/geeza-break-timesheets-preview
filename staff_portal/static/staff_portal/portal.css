@@ -68,6 +68,12 @@
   .editor-footer .actions{margin-top:16px;display:grid;grid-template-columns:1fr 1fr}
   .editor-footer .button{white-space:normal}
 }
+@media(max-width:360px){
+  .entry-table{min-width:1280px}
+  .entry-table-scroll{scroll-padding-left:16px}
+  .entry-table tbody .date-cell{position:static;box-shadow:none}
+  .entry-table thead .date-cell{left:auto;z-index:3;box-shadow:none}
+}
 @media print{
   .editor-add,.editor-footer,.editor-tag,.grid-scroll-hint,.row-options-cell,.row-remove-cell{display:none!important}
   .entry-table-scroll{overflow:visible;max-height:none}
