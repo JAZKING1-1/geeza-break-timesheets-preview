@@ -12,9 +12,9 @@ from .models import StaffProfile
 from .security import request_limited
 
 
-ROLES = [("employee", "Employee â€” enter a timesheet"),
-         ("finance", "Finance â€” review and export"),
-         ("administrator", "Administrator â€” view the demo team")]
+ROLES = [("employee", "Employee"),
+         ("finance", "Finance reviewer"),
+         ("administrator", "Administrator")]
 
 
 class PreviewLoginForm(forms.Form):

@@ -18,7 +18,7 @@ def queue_submission(sheet):
     notice, created = SubmissionNotification.objects.get_or_create(
         timesheet=sheet, revision=sheet.revision,
         defaults={"recipient": settings.TIMESHEET_NOTIFICATION_EMAIL,
-                  "subject": f"Geeza Break: timesheet ready for review â€” {sheet.month:%B %Y}",
+                  "subject": f"Geeza Break: timesheet ready for review - {sheet.month:%B %Y}",
                   "body": (f"{sheet.staff.name} has submitted their {sheet.month:%B %Y} timesheet.\n\n"
                            f"Recorded time: {sheet.total_display}\n"
                            f"Sign in with a finance or administrator account to review it:\n{url}\n"
