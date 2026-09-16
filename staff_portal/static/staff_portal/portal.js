@@ -6,14 +6,31 @@
   }));
   const summary = document.querySelector(".error-summary");
   if (summary) summary.focus();
+  else document.querySelector(".messages .notice")?.focus();
   document.querySelectorAll("[data-print]").forEach(button => button.addEventListener("click", () => window.print()));
   document.querySelectorAll("form[data-confirm]").forEach(form => form.addEventListener("submit", event => {
     if (!window.confirm(form.dataset.confirm)) event.preventDefault();
   }));
-  let dirty = false;
+  const saveState = document.getElementById("save-state");
+  let dirty = saveState?.dataset.dirty === "true";
+  function markUnsaved() {
+    dirty = true;
+    if (!saveState || saveState.classList.contains("has-changes")) return;
+    saveState.classList.add("has-changes");
+    saveState.querySelector("[data-save-label]").textContent = "You have unsaved changes.";
+    saveState.querySelector("[data-save-detail]").textContent = "Choose Save draft to keep your work, or Submit timesheet when your month is complete.";
+  }
   document.querySelectorAll("form[data-unsaved]").forEach(form => {
-    form.addEventListener("input", () => { dirty = true; });
+    form.addEventListener("input", markUnsaved);
+    form.addEventListener("change", markUnsaved);
     form.addEventListener("submit", event => { if (!event.defaultPrevented) dirty = false; });
+  });
+  function showSelection(select) {
+    select.classList.toggle("has-selection", select.value !== "");
+  }
+  document.querySelectorAll("select").forEach(showSelection);
+  document.addEventListener("change", event => {
+    if (event.target.matches("select")) showSelection(event.target);
   });
   const editor = document.querySelector("[data-month-editor]");
   if (editor) {
@@ -30,6 +47,7 @@
       const row = copy.content.querySelector("[data-entry-row]");
       document.getElementById("entry-rows").appendChild(row);
       total.value = index + 1;
+      row.querySelectorAll("select").forEach(showSelection);
       row.querySelector('select[name$="-date"]').focus();
       announcement.textContent = "Row " + (index + 1) + " added. Choose its date to begin.";
     });
@@ -43,6 +61,41 @@
   }
   window.addEventListener("beforeunload", event => {
     if (dirty) { event.preventDefault(); event.returnValue = ""; }
+  });
+  // Keep the clicked button enabled so its name/value is included in the POST.
+  // aria-disabled plus this submit guard prevents duplicate activation while waiting.
+  const pendingForms = new Map();
+  const feedback = document.getElementById("action-feedback");
+  document.addEventListener("submit", event => {
+    if (event.defaultPrevented) return;
+    const form = event.target;
+    // An unsaved-change prompt can cancel navigation to another view.
+    if (dirty && !form.matches("[data-unsaved]")) return;
+    if (pendingForms.has(form)) { event.preventDefault(); return; }
+    const button = event.submitter;
+    const message = button?.dataset.pendingLabel || (form.method === "get" ? "Loading results…" : "Please wait…");
+    const contents = button ? Array.from(button.childNodes).map(node => node.cloneNode(true)) : [];
+    pendingForms.set(form, {button, contents});
+    form.setAttribute("aria-busy", "true");
+    if (button) {
+      button.setAttribute("aria-disabled", "true");
+      button.classList.add("is-pending");
+      button.textContent = message;
+    }
+    if (feedback) feedback.textContent = message;
+  });
+  // The browser may restore this page from its back/forward cache.
+  window.addEventListener("pageshow", () => {
+    pendingForms.forEach(({button, contents}, form) => {
+      form.removeAttribute("aria-busy");
+      if (button) {
+        button.removeAttribute("aria-disabled");
+        button.classList.remove("is-pending");
+        button.replaceChildren(...contents);
+      }
+    });
+    pendingForms.clear();
+    if (feedback) feedback.textContent = "";
   });
   const warning = document.getElementById("session-warning");
   let warningTimer;

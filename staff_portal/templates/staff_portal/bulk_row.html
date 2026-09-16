@@ -14,7 +14,7 @@
   </td>
   <td class="row-options-cell">
     <details class="row-options" {% if row.end_date.value or row.start_fold.value == 1 or row.start_fold.value == '1' or row.end_fold.value == 1 or row.end_fold.value == '1' or row.end_date.errors or row.start_fold.errors or row.end_fold.errors %}open{% endif %}>
-      <summary>More<span class="sr-only"> options for row {{ number }}: overnight shift and clock changes</span></summary>
+      <summary>Options<span class="sr-only"> for row {{ number }}: overnight shift and clock changes</span></summary>
       <p class="help">For overnight work, choose the finish date. Only change the occurrence when UK clocks go back.</p>
       <div class="row-extra">
         {% include 'staff_portal/row_field.html' with field=row.end_date %}

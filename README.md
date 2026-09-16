@@ -79,6 +79,16 @@ changes, fictional-only seeding and email isolation. The layouts use labelled na
 controls, visible keyboard focus, responsive rows and accessible validation summaries.
 Formal assistive-technology acceptance testing remains a separate step.
 
+The brighter interface uses 16px form controls, 50px main action targets, underlined
+help/shortcut links, a visible current navigation item and distinct keyboard focus.
+Unsaved edits, pending submissions and server-confirmed results have text feedback;
+colour is supplementary. The main text/button colour pairs were checked at 4.5:1 or
+better. A pending-submit guard retains the clicked button's action in the POST and
+prevents repeat submission while waiting. The layout was checked at 320px and 390px
+phone widths. This follows [W3C guidance for older users](https://www.w3.org/WAI/older-users/)
+and [status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html);
+it is not a claim of a full WCAG audit or testing with older participants.
+
 ## Moving beyond a review
 
 `APP_ENV=production` removes review access and refuses to start without persistent
