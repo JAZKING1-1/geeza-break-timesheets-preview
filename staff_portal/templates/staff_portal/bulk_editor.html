@@ -1,0 +1,20 @@
+<form id="month-editor" method="post" action="{% url 'staff:sheet' sheet.pk %}" data-unsaved data-month-editor novalidate>
+{% csrf_token %}<input type="hidden" name="revision" value="{{ editor_revision }}">
+{{ editor.management_form }}
+{% if editor_errors or editor.total_error_count %}
+<div class="error-summary" tabindex="-1" role="alert"><h2>Check your timesheet</h2><p>Your entries are still here. Nothing has been saved.</p><ul>
+{% for error in editor_errors %}<li>{{ error }}</li>{% endfor %}
+{% for error in editor.non_form_errors %}<li>{{ error }}</li>{% endfor %}
+{% for row in editor %}{% if not row.DELETE.value %}{% for error in row.non_field_errors %}<li><a href="#{{ row.date.id_for_label }}">Row {{ forloop.parentloop.counter }}: {{ error }}</a></li>{% endfor %}{% for field in row %}{% for error in field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>{% endfor %}{% endfor %}{% endif %}{% endfor %}
+</ul></div>{% endif %}
+<section class="panel month-editor-panel" aria-labelledby="editor-heading">
+  <div class="section-heading"><div><h2 id="editor-heading">Your month, on one page</h2><p id="entry-help">Choose a date and work type, then add your times and purpose. UK local time. Leave unused rows blank.<br>Purpose is optional. Keep family names and sensitive care details out of your timesheet.</p></div><span class="editor-tag">ONE ROW PER SHIFT</span></div>
+  <div class="entry-columns" aria-hidden="true"><span>Date</span><span>Work type</span><span>Start</span><span>Finish</span><span>Break (min)</span><span>Purpose</span></div>
+  <div id="entry-rows">
+  {% for row in editor %}{% include 'staff_portal/bulk_row.html' with number=forloop.counter %}{% endfor %}
+  </div>
+  <div class="editor-add"><button type="submit" name="action" value="add_rows" class="button secondary" id="add-row">＋ Add another row</button><p class="help" id="row-announcement" role="status" aria-live="polite">Changes are saved when you choose Save draft or Submit timesheet.</p></div>
+</section>
+<template id="empty-entry-row">{% include 'staff_portal/bulk_row.html' with row=editor.empty_form number='__number__' %}</template>
+<div class="editor-footer no-print"><div><strong>Finished for now?</strong><p>Save to continue later, or submit all rows for review. Submitted entries will be locked.</p></div><div class="actions"><button class="button secondary" name="action" value="save">Save draft</button><button class="button primary" name="action" value="submit" data-submit-month>Submit timesheet →</button></div></div>
+</form>

@@ -1,0 +1,29 @@
+from django.urls import path
+from . import auth_views, views, preview
+
+app_name = "staff"
+urlpatterns = [
+    path("preview/role/", preview.switch_role, name="switch_role"),
+    path("", views.dashboard, name="dashboard"),
+    path("login/", auth_views.login, name="login"),
+    path("logout/", auth_views.logout, name="logout"),
+    path("verify/", auth_views.second_factor, name="second_factor"),
+    path("reset-password/", auth_views.reset_password, name="reset_password"),
+    path("set-password/", auth_views.set_password, name="set_password"),
+    path("set-password/<str:token>/", auth_views.password_link, name="password_link"),
+    path("security/", auth_views.security_settings, name="security"),
+    path("keep-session/", views.keep_session, name="keep_session"),
+    path("timesheets/new/", views.new_sheet, name="new_sheet"),
+    path("timesheets/<int:pk>/", views.sheet, name="sheet"),
+    path("timesheets/<int:pk>/action/", views.sheet_action, name="sheet_action"),
+    path("timesheets/<int:pk>/add/", views.entry, name="entry_add"),
+    path("timesheets/<int:pk>/entries/<int:entry_id>/", views.entry, name="entry_edit"),
+    path("timesheets/<int:pk>/entries/<int:entry_id>/remove/", views.remove_entry, name="entry_remove"),
+    path("reports/", views.reports, name="reports"),
+    path("reports/export/", views.export_report, name="export_report"),
+    path("team/", views.staff_list, name="staff_list"),
+    path("team/add/", views.staff_edit, name="staff_add"),
+    path("team/<int:pk>/", views.staff_edit, name="staff_edit"),
+    path("team/<int:pk>/invite/", views.invite, name="invite"),
+    path("local-emails/", views.local_emails, name="local_emails"),
+]

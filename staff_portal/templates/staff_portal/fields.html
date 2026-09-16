@@ -1,0 +1,15 @@
+{% if form.errors %}<div class="error-summary" tabindex="-1" role="alert">
+<h2>Please check the following</h2>
+{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+<ul>{% for field in form %}{% for error in field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>{% endfor %}{% endfor %}</ul>
+</div>{% endif %}
+{% for field in form %}
+  {% if field.is_hidden %}{{ field }}{% else %}
+  <div class="field{% if field.name == 'notes' %} wide{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if not field.field.required %}<span class="optional">Optional</span>{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<div class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>{% endif %}
+    {% if field.errors %}<ul class="field-errors" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  {% endif %}
+{% endfor %}

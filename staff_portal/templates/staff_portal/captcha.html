@@ -1,0 +1,5 @@
+{% if captcha_simulated %}
+<details class="captcha-preview"><summary>Local verification simulator</summary><label for="captcha">Test verification result</label><select name="captcha" id="captcha"><option value="pass">Pass verification</option><option value="fail">Fail verification</option></select><p class="help">Preview only. Real bot protection is required before launch.</p></details>
+{% else %}
+<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-action="{{ captcha_action }}" data-theme="light"></div><noscript><p>Verification requires JavaScript. Contact your administrator if you need help signing in.</p></noscript>
+{% endif %}

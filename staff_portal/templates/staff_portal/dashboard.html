@@ -1,0 +1,20 @@
+{% extends "staff_portal/base.html" %}
+{% block title %}My timesheets{% endblock %}
+{% block content %}
+<div class="topline"><span>YOUR WORKSPACE / MY TIMESHEETS</span><span>{% now "j F Y" %}</span></div>
+<header class="page-heading"><div><span class="eyebrow">GOOD TO SEE YOU</span><h1>Hello, {{ portal_staff.name }}.</h1><p>Every hour counts. Keep yours up to date.</p></div><div class="round-symbol" aria-hidden="true">◷</div></header>
+{% if portal_staff.can_review and pending_count %}<a class="review-prompt" href="{% url 'staff:reports' %}?status=submitted"><span><strong>{{ pending_count }} timesheet{{ pending_count|pluralize }} awaiting a review</strong><small>Help the team get ready for month end.</small></span><span aria-hidden="true">→</span></a>{% endif %}
+<section class="month-feature">
+<div><span class="eyebrow">YOUR MONTH AT A GLANCE</span><h2>{{ month|date:"F Y" }}</h2><p>Record your shifts, check your hours, then submit.</p>
+{% if current %}<div class="actions"><a class="button dark" href="{% url 'staff:sheet' current.pk %}">{% if current.editable %}Continue timesheet{% else %}View timesheet{% endif %} <span aria-hidden="true">→</span></a><span class="status {{ current.status }}">{{ current.get_status_display }}</span></div>
+{% else %}<form method="post" action="{% url 'staff:new_sheet' %}">{% csrf_token %}<input type="hidden" name="month" value="{{ month|date:'Y-m' }}"><button class="button dark">Start this month <span aria-hidden="true">＋</span></button></form>{% endif %}</div>
+<div class="hours-display"><strong>{% if current %}{{ current.total_display }}{% else %}0h 00m{% endif %}</strong><span>HOURS RECORDED</span><small>{% if current and current.status == 'approved' %}Reviewed and approved{% else %}Your saved time so far{% endif %}</small></div>
+</section>
+<section class="panel">
+<div class="section-heading"><div><h2>My timesheets</h2><p>Your saved months, all in one place.</p></div><form method="post" action="{% url 'staff:new_sheet' %}" class="inline-form">{% csrf_token %}<label for="choose-month" class="sr-only">Month to open</label><input type="month" name="month" id="choose-month" value="{{ month|date:'Y-m' }}" required><button class="button secondary">Open month</button></form></div>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable timesheet table"><table><caption class="sr-only">Your monthly timesheets</caption><thead><tr><th>Month</th><th>Hours recorded</th><th>Status</th><th><span class="sr-only">Open</span></th></tr></thead><tbody>
+{% for item in sheets %}<tr><th scope="row">{{ item.month|date:"F Y" }}</th><td>{{ item.total_display }}</td><td><span class="status {{ item.status }}">{{ item.get_status_display }}</span></td><td><a class="table-link" href="{% url 'staff:sheet' item.pk %}" aria-label="Open {{ item.month|date:'F Y' }} timesheet">Open →</a></td></tr>
+{% empty %}<tr><td colspan="4"><div class="empty-state"><span aria-hidden="true">◷</span><h3>A fresh start.</h3><p>Your first timesheet will appear here. Start this month whenever you’re ready.</p></div></td></tr>{% endfor %}
+</tbody></table></div></section>
+<div class="small-tip"><span aria-hidden="true">✳</span><p><strong>A handy reminder.</strong> Save your shifts as you go. You can make changes until you submit your month for review.</p></div>
+{% endblock %}

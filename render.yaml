@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: geeza-break-timesheets-preview
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: bash build.sh
+    startCommand: bash start.sh
+    healthCheckPath: /health/
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_ENV
+        value: preview
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: PREVIEW_ACCESS_CODE
+        generateValue: true
