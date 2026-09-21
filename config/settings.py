@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 APP_ENV = os.getenv("APP_ENV", "local")
-if APP_ENV not in {"local", "preview", "production"}:
-    raise ImproperlyConfigured("APP_ENV must be local, preview or production.")
-PORTAL_LOCAL = APP_ENV == "local"
+if APP_ENV not in {"local", "development", "preview", "production"}:
+    raise ImproperlyConfigured("APP_ENV must be local, development, preview or production.")
+PORTAL_LOCAL = APP_ENV in {"local", "development"}
 PORTAL_PREVIEW = APP_ENV in {"local", "preview"}
 DEBUG = PORTAL_LOCAL
 LOCAL_DATA = BASE_DIR / ".local"
@@ -80,7 +80,8 @@ TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIR
               "OPTIONS": {"context_processors": [
                   "django.template.context_processors.request", "django.contrib.auth.context_processors.auth",
                   "django.contrib.messages.context_processors.messages", "staff_portal.context.portal_context"]}}]
-DATABASES = {"default": dj_database_url.config(default=f"sqlite:///{LOCAL_DATA / 'preview.sqlite3'}", conn_max_age=60)}
+local_database = "development.sqlite3" if APP_ENV == "development" else "preview.sqlite3"
+DATABASES = {"default": dj_database_url.config(default=f"sqlite:///{LOCAL_DATA / local_database}", conn_max_age=60)}
 if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
     DATABASES["default"]["OPTIONS"] = {"timeout": 20}
 AUTH_PASSWORD_VALIDATORS = [
@@ -102,13 +103,13 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
-PORTAL_CAPTCHA_MODE = "preview" if PORTAL_PREVIEW else "turnstile"
+PORTAL_CAPTCHA_MODE = "preview" if PORTAL_PREVIEW else "simulate" if PORTAL_LOCAL else "turnstile"
 TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
 TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
 TURNSTILE_HOSTNAMES = [host for host in os.getenv("TURNSTILE_HOSTNAMES", "").split(",") if host]
 EMAIL_FILE_PATH = LOCAL_DATA / "emails"
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend" if PORTAL_PREVIEW else "staff_portal.mail.MailjetBackend"
-DEFAULT_FROM_EMAIL = "preview@example.test" if PORTAL_PREVIEW else os.getenv("DEFAULT_FROM_EMAIL", "")
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend" if PORTAL_PREVIEW or PORTAL_LOCAL else "staff_portal.mail.MailjetBackend"
+DEFAULT_FROM_EMAIL = "preview@example.test" if PORTAL_PREVIEW or PORTAL_LOCAL else os.getenv("DEFAULT_FROM_EMAIL", "")
 MAILJET_API_KEY = "" if PORTAL_PREVIEW else os.getenv("MAILJET_API_KEY", "")
 MAILJET_API_SECRET = "" if PORTAL_PREVIEW else os.getenv("MAILJET_API_SECRET", "")
 # Claim notifications can be explicitly enabled in the separate review portal.
@@ -146,7 +147,11 @@ if APP_ENV == "production":
         raise ImproperlyConfigured("Live payroll requires persistent PostgreSQL.")
     if not all([TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, TURNSTILE_HOSTNAMES]):
         raise ImproperlyConfigured("Live payroll requires real Turnstile verification.")
+    if TURNSTILE_SITE_KEY.startswith(("1x00000000000000000000", "2x00000000000000000000", "3x00000000000000000000")):
+        raise ImproperlyConfigured("Use a real Turnstile widget, not a test key, for live payroll.")
     if not all([MAILJET_API_KEY, MAILJET_API_SECRET, DEFAULT_FROM_EMAIL, TIMESHEET_NOTIFICATION_EMAIL]):
         raise ImproperlyConfigured("Configure verified email delivery before live payroll use.")
+    if TIMESHEET_EMAIL_DELIVERY != "mailjet":
+        raise ImproperlyConfigured("Enable real timesheet notification delivery before live payroll use.")
     if not PORTAL_BASE_URL.startswith("https://"):
         raise ImproperlyConfigured("Live payroll requires an HTTPS portal URL.")

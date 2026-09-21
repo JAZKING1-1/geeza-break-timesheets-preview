@@ -8,74 +8,63 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .bulk import monthly_formset
-from .calendar_view import annual_calendar
 from .models import StaffProfile, SubmissionNotification, TimeEntry, Timesheet, WorkCategory
 from .service_catalog import SERVICES, sync_service_catalog
 from .services import save_entry
 
 
 @override_settings(PORTAL_PREVIEW=False, PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
-class AnnualCalendarTests(TestCase):
+class WorkDatePickerTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user("calendar-staff")
         self.staff = StaffProfile.objects.create(user=self.user, name="Calendar employee", job_title="Support")
         self.client.force_login(self.user)
 
-    def test_twelve_months_and_leap_year_days(self):
-        for year, february_days in [(2026, 28), (2028, 29), (2100, 28), (2000, 29)]:
-            months = annual_calendar(year, [], dt.date(2026, 9, 21))
-            self.assertEqual([m["month"].month for m in months], list(range(1, 13)))
-            days = [d["number"] for week in months[1]["weeks"] for d in week if d["number"]]
-            self.assertEqual(days, list(range(1, february_days + 1)))
+    def test_date_opens_correct_month_and_prefills_only_new_row(self):
+        response = self.client.post(reverse("staff:new_sheet"), {"work_date": "2028-02-29"})
+        sheet = Timesheet.objects.get(staff=self.staff, month=dt.date(2028, 2, 1))
+        url = reverse("staff:sheet", args=[sheet.pk])
+        self.assertRedirects(response, url + "?date=2028-02-29#entry-grid")
+        response = self.client.get(url, {"date": "2028-02-29"})
+        field = response.context["editor"].forms[0]["date"]
+        self.assertEqual(field.value(), dt.date(2028, 2, 29))
+        self.assertEqual(field.field.widget.input_type, "date")
+        self.assertEqual(field.field.widget.attrs["max"], "2028-02-29")
+        self.assertFalse(sheet.entries.exists())
+        self.assertContains(response, 'data-calendar-for="id_work_date"')
+        self.assertContains(response, 'name="work_date"')
 
-    def test_selected_year_is_private_and_get_does_not_create_sheets(self):
-        own = Timesheet.objects.create(staff=self.staff, month=dt.date(2028, 12, 1))
-        Timesheet.objects.create(staff=self.staff, month=dt.date(2027, 12, 1))
-        colleague = StaffProfile.objects.create(name="Another employee", job_title="Support")
-        Timesheet.objects.create(staff=colleague, month=dt.date(2028, 1, 1), status="approved")
-        response = self.client.get(reverse("staff:dashboard"), {"year": "2028"})
-        self.assertEqual(response.context["calendar_year"], 2028)
-        self.assertEqual(response.context["sheets"], [own])
-        self.assertIsNone(response.context["calendar_months"][0]["sheet"])
-        self.assertEqual(response.context["calendar_months"][11]["sheet"], own)
-        self.assertContains(response, 'aria-label="Start February 2028"')
-        self.assertContains(response, 'aria-label="Open December 2028"')
-        self.assertEqual(Timesheet.objects.count(), 3)
-
-    def test_invalid_year_has_feedback_and_extremes_do_not_crash(self):
-        for year in ["oops", "0", "10000", "9" * 60]:
-            response = self.client.get(reverse("staff:dashboard"), {"year": year})
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(response.context["year_form"].errors)
-        for year in [1, 9999]:
-            response = self.client.get(reverse("staff:dashboard"), {"year": year})
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context["calendar_months"]), 12)
-
-    def test_each_month_opens_its_own_sheet_without_duplicates(self):
+    def test_dates_in_all_months_and_years_reuse_existing_timesheets(self):
         for month in range(1, 13):
-            value = f"2028-{month:02}"
-            response = self.client.post(reverse("staff:new_sheet"), {"month": value})
-            sheet = Timesheet.objects.get(staff=self.staff, month=f"{value}-01")
-            self.assertRedirects(response, reverse("staff:sheet", args=[sheet.pk]))
-            self.client.post(reverse("staff:new_sheet"), {"month": value})
-            dates = dict(monthly_formset(sheet).forms[0].fields["date"].choices)
-            if month == 2:
-                self.assertIn("2028-02-29", dates)
-            self.assertNotIn("2028-13-01", dates)
-        self.assertEqual(Timesheet.objects.filter(staff=self.staff).count(), 12)
+            value = f"2028-{month:02}-15"
+            for _ in range(2):
+                self.assertEqual(self.client.post(reverse("staff:new_sheet"), {"work_date": value}).status_code, 302)
+        self.client.post(reverse("staff:new_sheet"), {"work_date": "2027-12-31"})
+        self.assertEqual(Timesheet.objects.filter(staff=self.staff).count(), 13)
+        response = self.client.get(reverse("staff:dashboard"))
+        self.assertContains(response, "December 2027")
+        self.assertContains(response, "December 2028")
+        self.assertNotContains(response, 'id="year-calendar"')
 
-    def test_saved_day_markers_and_totals(self):
-        sheet = Timesheet.objects.create(staff=self.staff, month=dt.date(2026, 9, 1))
-        category = WorkCategory.objects.create(name="Family Support")
-        save_entry(self.user, sheet.pk, 0, TimeEntry(timesheet=sheet, date=dt.date(2026, 9, 21),
-            end_date=dt.date(2026, 9, 21), start_time=dt.time(9), end_time=dt.time(17),
-            break_minutes=30, category=category))
-        months = annual_calendar(2026, [sheet], dt.date(2026, 9, 21))
-        day = next(d for w in months[8]["weeks"] for d in w if d["number"] == 21)
-        self.assertTrue(day["today"])
-        self.assertEqual(day["shifts"], 1)
-        self.assertEqual(months[8]["sheet"].total_display, "7h 30m")
+    def test_invalid_dates_create_nothing_and_month_scope_cannot_be_bypassed(self):
+        for value in ["", "not-a-date", "2027-02-29", "2028-02-30"]:
+            self.client.post(reverse("staff:new_sheet"), {"work_date": value})
+        self.assertFalse(Timesheet.objects.exists())
+        sheet = Timesheet.objects.create(staff=self.staff, month=dt.date(2028, 2, 1))
+        form = monthly_formset(sheet).forms[0]
+        form.cleaned_data = {"date": dt.date(2028, 3, 1)}
+        from django.core.exceptions import ValidationError
+        with self.assertRaises(ValidationError):
+            form.clean_date()
+        response = self.client.get(reverse("staff:sheet", args=[sheet.pk]), {"date": "2028-03-01"})
+        self.assertIsNone(response.context["editor"].forms[0]["date"].value())
+
+    def test_date_picker_preserves_other_employees_records(self):
+        colleague = StaffProfile.objects.create(name="Another employee", job_title="Support")
+        other = Timesheet.objects.create(staff=colleague, month=dt.date(2028, 2, 1))
+        self.client.post(reverse("staff:new_sheet"), {"work_date": "2028-02-29", "staff": colleague.pk})
+        self.assertEqual(Timesheet.objects.filter(staff=self.staff).count(), 1)
+        self.assertEqual(self.client.get(reverse("staff:sheet", args=[other.pk])).status_code, 404)
 
     def test_service_catalog_preserves_legacy_entries_but_prevents_new_legacy_claims(self):
         legacy = WorkCategory.objects.create(name="Respite")

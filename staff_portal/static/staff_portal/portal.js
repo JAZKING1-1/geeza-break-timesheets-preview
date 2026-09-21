@@ -1,9 +1,12 @@
 (() => {
-  document.querySelectorAll("[data-demo-email]").forEach(button => button.addEventListener("click", () => {
-    document.getElementById("id_email").value = button.dataset.demoEmail;
-    document.getElementById("id_password").value = button.dataset.demoPassword;
-    document.querySelector("button[type=submit]")?.focus();
-  }));
+  document.querySelectorAll("[data-calendar-for]").forEach(button => {
+    const input = document.getElementById(button.dataset.calendarFor);
+    if (!input || typeof input.showPicker !== "function") return;
+    button.hidden = false;
+    button.addEventListener("click", () => {
+      try { input.showPicker(); } catch { input.focus(); }
+    });
+  });
   const summary = document.querySelector(".error-summary");
   if (summary) summary.focus();
   else document.querySelector(".messages .notice")?.focus();
@@ -48,7 +51,7 @@
       document.getElementById("entry-rows").appendChild(row);
       total.value = index + 1;
       row.querySelectorAll("select").forEach(showSelection);
-      row.querySelector('select[name$="-date"]').focus();
+      row.querySelector('input[name$="-date"]').focus();
       announcement.textContent = "Row " + (index + 1) + " added. Choose its date to begin.";
     });
     editor.addEventListener("change", event => {

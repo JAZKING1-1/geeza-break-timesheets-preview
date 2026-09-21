@@ -68,7 +68,7 @@ def portal_required(role=None):
                 return redirect("staff:login")
             profile = StaffProfile.objects.filter(user=request.user, enabled=True,
                                                   user__is_active=True).first()
-            if not profile:
+            if not profile or (profile.is_demo and not settings.PORTAL_PREVIEW):
                 auth.logout(request)
                 return redirect("staff:login")
             if role == "review" and not profile.can_review:

@@ -1,29 +1,41 @@
-# Geeza Break — timesheet review preview
+# Geeza Break — staff timesheets
 
-A separate Django project for reviewing the staff timesheet workflow. This repository
+A separate Django project for recording worked hours, submitting monthly claims and finance review. This repository
 contains only the portal and its public logo. It has no dependency on the main website,
 no copied Git history, no real staff roster, no payroll database and no Mailjet credentials.
 
-## Review the workflow
+## Record and review hours
 
-1. Open the hosted link on a phone, tablet or computer.
-2. Choose **Employee** and enter the private review code shared by the project owner.
-3. Choose any of the twelve months in the annual calendar, or change the year. Saved
-   shift dates have a dot; each month shows its total and status. Enter each shift in a horizontal row with date, service / work type,
+1. Open the staff portal on a phone, tablet or computer.
+2. In personal-account mode, sign in with your work email and password.
+   The hosted review remains separate until the production prerequisites are configured.
+3. Use **Date worked → Choose date** to pick a day, month and year in the calendar
+   popup, then choose **Open timesheet**. The matching month opens with the selected
+   date in a new row. Each row also has a date picker. Enter each shift in a horizontal
+   row with date, service / work type,
    start/finish, break and purpose. On a phone, swipe across the grid; the date stays
    visible. The saved total and save/submit controls stay below the grid.
 4. Save a draft or submit the complete timesheet in one action.
-5. Use **Switch view → Finance** to review, return or approve another demo user's sheet.
+5. An authorised finance reviewer can review, return or approve another employee's sheet.
 6. Export a summary or detailed CSV, or print/save a PDF.
-7. Switch to **Administrator → Email previews** to see the submission notification.
+7. Submission email status is displayed on the timesheet; email delivery must be configured.
 
-All accounts are fictional. Shared demo users can see each other's changes when using
+**Review mode only:** all accounts are fictional. Shared demo users can see each other's changes when using
 the same role. Do not enter real employee, family, care, pay or other sensitive information.
 Account creation, invitations, password changes and MFA changes are disabled in review mode.
 The review code is validated server-side, rate limited and never embedded in page source.
 Share it privately with reviewers; it is separate from the website link.
 
-## Run locally
+## Personal accounts and production
+
+See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the prepared owner-account flow,
+required private configuration, dedicated database, costs and cutover checks.
+`APP_ENV=development` uses personal accounts in a separate local database.
+`APP_ENV=production` requires persistent PostgreSQL, real CAPTCHA and email delivery.
+The one-use setup link lets the owner choose their own password. Startup never resets
+that password. Sample accounts and role switching are unavailable outside review mode.
+
+## Run the review locally
 
 Use Python 3.11:
 
@@ -67,9 +79,10 @@ to the main website database.
 
 ## Services and calendar
 
-The January–December overview works across years and includes correct leap-year dates.
-It shows only the signed-in employee's saved shifts. Opening a month uses the existing
-ownership-protected monthly editor; simply browsing a year does not create records.
+The date popup is in the entry workflow, beside the timesheet controls. It accepts any
+valid day, month and year, including leap days, and opens the correct monthly sheet.
+The saved-month table retains all years. Row dates are validated against their month;
+choosing another month above the rows preserves existing records and approvals.
 
 Service names were checked on 21 September 2026 against the public
 [services page](https://www.geezabreak.org.uk/services/) and
@@ -135,4 +148,6 @@ it is not a claim of a full WCAG audit or testing with older participants.
 PostgreSQL, a verified HTTPS URL, real Turnstile configuration and configured Mailjet
 delivery. Install a PostgreSQL driver, provision backups, restore-test them, confirm
 staff addresses, configure an administrator and perform a separate production review.
-Do not use `start.sh` for live payroll: its bootstrap is explicitly restricted to previews.
+`start.sh` selects the personal-owner bootstrap for production, and the fictional seed
+only for review mode. Never switch the hosted service before completing the production
+configuration and verification steps.

@@ -1,6 +1,5 @@
 import base64
 import io
-import json
 import logging
 
 import qrcode
@@ -49,7 +48,7 @@ def login(request):
         elif not verify_captcha(request, "login"):
             form.add_error(None, "Verification was unsuccessful. Try the verification again.")
         else:
-            profile = StaffProfile.objects.select_related("user").filter(email__iexact=email, enabled=True).first()
+            profile = StaffProfile.objects.select_related("user").filter(email__iexact=email, enabled=True, is_demo=False).first()
             user = None
             if profile and profile.user_id:
                 user = auth.authenticate(request, username=profile.user.username, password=form.cleaned_data["password"])
@@ -63,13 +62,7 @@ def login(request):
                     return redirect("staff:second_factor")
                 return signed_in(request, user)
             form.add_error(None, "We couldn’t sign you in. Check your email and password.")
-    demo_accounts = []
-    if settings.PORTAL_LOCAL:
-        path = settings.LOCAL_DATA / "demo-accounts.json"
-        if path.exists():
-            demo_accounts = json.loads(path.read_text(encoding="utf-8"))
-    return render(request, "staff_portal/login.html", {"form": form, "captcha_action": "login",
-                                                     "demo_accounts": demo_accounts})
+    return render(request, "staff_portal/login.html", {"form": form, "captcha_action": "login"})
 
 
 @require_POST
@@ -158,7 +151,7 @@ def set_password(request):
                 messages.success(request, "Your password is ready. You can now sign in.")
                 return redirect("staff:login")
     return render(request, "staff_portal/auth_form.html", {
-        "form": form, "title": "Make yourself at home", "intro": f"Choose a personal password for {link.staff.name}.",
+        "form": form, "title": "Set up your staff account", "intro": f"Choose a personal password for {link.staff.name}.",
         "button": "Save my password"})
 
 

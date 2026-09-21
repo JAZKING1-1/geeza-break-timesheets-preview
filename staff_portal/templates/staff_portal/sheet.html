@@ -1,11 +1,12 @@
 {% extends "staff_portal/base.html" %}
 {% block title %}{{ sheet.month|date:"F Y" }} timesheet{% endblock %}
 {% block content %}
-<div class="topline"><a href="{% if own %}{% url 'staff:dashboard' %}?year={{ sheet.month|date:'Y' }}#year-calendar{% else %}{% url 'staff:reports' %}{% endif %}">← {% if own %}{{ sheet.month|date:'Y' }} calendar{% else %}Review &amp; reports{% endif %}</a><button class="text-button no-print" type="button" data-print>Print / save PDF</button></div>
+<div class="topline"><a href="{% if own %}{% url 'staff:dashboard' %}{% else %}{% url 'staff:reports' %}{% endif %}">← {% if own %}My timesheets{% else %}Review &amp; reports{% endif %}</a><button class="text-button no-print" type="button" data-print>Print / save PDF</button></div>
 <header class="page-heading"><div><span class="eyebrow">MONTHLY TIMESHEET</span><h1>{{ sheet.month|date:"F Y" }}</h1><p>{{ sheet.staff.name }} · {{ sheet.staff.job_title }}</p></div><span class="status {{ sheet.status }}">{{ sheet.get_status_display }}</span></header>
 <div class="sheet-summary"><div><small>RECORDED TIME</small><strong>{{ sheet.total_display }}</strong></div><div><small>SHIFTS</small><strong>{{ sheet.entries.count }}</strong></div><div><small>LAST UPDATED</small><strong class="smaller">{{ sheet.updated_at|date:"j M, H:i" }}</strong></div></div>
 {% if sheet.review_note %}<div class="notice warning"><strong>Reviewer’s note:</strong> {{ sheet.review_note }}</div>{% endif %}
 {% if not sheet.editable %}<p class="muted">{% if sheet.status == 'approved' %}This timesheet is approved. A reviewer must reopen it before any corrections.{% else %}This timesheet is with your reviewer. Entries are locked while it is reviewed.{% endif %}</p>{% endif %}
+{% if own %}{% include 'staff_portal/work_date_picker.html' %}{% endif %}
 {% if can_edit %}
 {% include 'staff_portal/bulk_editor.html' %}
 {% else %}

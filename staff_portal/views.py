@@ -13,12 +13,12 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .accounts import issue_link
 from .bulk import MAX_ROWS, RowErrors, monthly_formset, save_month
-from .calendar_view import annual_calendar
-from .forms import EntryForm, MonthForm, ProfileForm, YearForm
+from .forms import EntryForm, MonthForm, ProfileForm, WorkDateForm
 from .models import AuditEvent, PasswordLink, StaffProfile, TimeEntry, Timesheet
 from .security import portal_required
 from .services import audit, delete_entry, hours_decimal, save_entry, transition
@@ -49,31 +49,28 @@ def permitted_sheet(request, pk):
 def dashboard(request):
     month = month_value(request.GET.get("month"))
     today = timezone.localdate()
-    year_form = YearForm(request.GET if "year" in request.GET else None, initial={"year": month.year})
-    year = year_form.cleaned_data["year"] if year_form.is_bound and year_form.is_valid() else month.year
-    month = month.replace(year=year)
-    sheets = list(Timesheet.objects.filter(staff=request.staff, month__year=year).prefetch_related("entries"))
+    sheets = list(Timesheet.objects.filter(staff=request.staff).prefetch_related("entries"))
     current = next((item for item in sheets if item.month == month), None)
     return render(request, "staff_portal/dashboard.html", {
         "current": current, "sheets": sheets, "month": month,
-        "year_form": year_form, "calendar_year": year, "current_year": today.year,
-        "previous_year": year - 1 if year > 1 else None,
-        "next_year": year + 1 if year < 9999 else None,
-        "calendar_months": annual_calendar(year, sheets, today),
+        "work_date_form": WorkDateForm(initial={"work_date": today}),
         "pending_count": Timesheet.objects.filter(status="submitted").exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 
 @require_POST
 @portal_required()
 def new_sheet(request):
-    form = MonthForm(request.POST)
+    choosing_date = "work_date" in request.POST
+    form = WorkDateForm(request.POST) if choosing_date else MonthForm(request.POST)
     if form.is_valid():
-        month = form.cleaned_data["month"].replace(day=1)
+        day = form.cleaned_data["work_date"] if choosing_date else form.cleaned_data["month"]
+        month = day.replace(day=1)
         sheet, created = Timesheet.objects.get_or_create(staff=request.staff, month=month)
         if created:
             audit(request.user, "Timesheet created", request.staff, sheet)
-        return redirect("staff:sheet", pk=sheet.pk)
-    messages.error(request, "Choose a valid calendar month.")
+        url = reverse("staff:sheet", args=[sheet.pk])
+        return redirect(f"{url}?date={day.isoformat()}#entry-grid" if choosing_date else url)
+    messages.error(request, "Choose a valid date, including the day, month and year." if choosing_date else "Choose a valid calendar month.")
     return redirect("staff:dashboard")
 
 
@@ -82,7 +79,13 @@ def sheet(request, pk):
     item = permitted_sheet(request, pk)
     own = item.staff_id == request.staff.pk
     can_edit = own and item.editable
-    editor = monthly_formset(item, request.POST if request.method == "POST" else None) if can_edit else None
+    picked = WorkDateForm({"work_date": request.GET.get("date", "")})
+    selected_date = picked.cleaned_data["work_date"] if picked.is_valid() else None
+    if selected_date and selected_date.replace(day=1) != item.month:
+        selected_date = None
+    today = timezone.localdate()
+    picker_date = selected_date or (today if today.replace(day=1) == item.month else item.month)
+    editor = monthly_formset(item, request.POST if request.method == "POST" else None, selected_date) if can_edit else None
     errors, status = [], 200
     if request.method == "POST":
         if not can_edit:
@@ -121,6 +124,7 @@ def sheet(request, pk):
             status = 400
     return render(request, "staff_portal/sheet.html", {
         "sheet": item, "own": own, "can_edit": can_edit, "editor": editor,
+        "work_date_form": WorkDateForm(initial={"work_date": picker_date}),
         "editor_errors": errors, "editor_revision": revision_value(request) if request.method == "POST" else item.revision,
         "can_review": request.staff.can_review and not own,
         "notification": item.notifications.first(),

@@ -1,0 +1,17 @@
+.work-date-picker { display:flex; align-items:center; flex-wrap:wrap; gap:18px 28px; padding:22px; margin:0 0 24px; border:2px solid #00789a; border-radius:14px; background:#e5f8ff; }
+.work-date-picker > div { flex:1 1 280px; }
+.work-date-picker h2 { font-size:22px; margin:0 0 6px; }
+.work-date-picker p { margin:0; font-size:16px; max-width:650px; }
+.work-date-picker form { flex:1 1 440px; min-width:0; }
+.work-date-picker label { display:block; font-weight:700; margin-bottom:6px; }
+.work-date-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.work-date-actions input { flex:1 1 165px; min-width:0; max-width:240px; min-height:50px; }
+.work-date-actions .button { flex:1 1 auto; }
+.work-date-actions [hidden] { display:none; }
+.row-field input[type=date] { min-width:0; width:100%; }
+body:not(.with-banner) .sidebar { top:0; }
+@media(max-width:560px) {
+  .work-date-picker { padding:18px 16px; }
+  .work-date-actions input { max-width:none; flex-basis:100%; }
+  .work-date-actions .button { flex-basis:100%; }
+}

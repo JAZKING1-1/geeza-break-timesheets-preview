@@ -7,13 +7,13 @@
   <link rel="icon" href="{% static 'images/thumbnail_LOGO.png' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/portal.css' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/comfort.css' %}">
-  <link rel="stylesheet" href="{% static 'staff_portal/calendar.css' %}">
+  <link rel="stylesheet" href="{% static 'staff_portal/date-picker.css' %}">
   <script defer src="{% static 'staff_portal/portal.js' %}"></script>
   {% if captcha_action and not captcha_simulated and not portal_preview %}<script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>{% endif %}
 </head>
-<body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}">
+<body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}{% if portal_preview or portal_local %} with-banner{% endif %}">
 <a class="skip" href="#main">Skip to content</a>
-{% if portal_preview %}<div class="local-banner preview-banner"><span class="local-dot"></span><strong>PRIVATE REVIEW</strong><span>Fictional data only · {% if notification_preview %}Emails are previews{% else %}Claim emails enabled{% endif %} · Demo may reset</span></div>{% elif portal_local %}<div class="local-banner"><span class="local-dot"></span><strong>LOCAL PREVIEW</strong><span>Test data · {% if notification_preview %}Emails stay on this computer{% else %}Submission email enabled{% endif %} · CAPTCHA simulated</span></div>{% endif %}
+{% if portal_preview %}<div class="local-banner preview-banner"><span class="local-dot"></span><strong>PRIVATE REVIEW</strong><span>Fictional data only · {% if notification_preview %}Emails are previews{% else %}Claim emails enabled{% endif %} · Demo may reset</span></div>{% elif portal_local %}<div class="local-banner"><span class="local-dot"></span><strong>LOCAL DEVELOPMENT</strong><span>Stored on this computer · {% if notification_preview %}Email delivery is off{% else %}Submission email enabled{% endif %}</span></div>{% endif %}
 {% if portal_staff %}
 <aside class="sidebar">
   <a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="72" height="72"><span>Staff space<small>A little time, well spent.</small></span></a>
@@ -31,14 +31,14 @@
   <a class="website-link" href="{% url 'staff:dashboard' %}">Back to timesheets</a>
 </aside>
 {% else %}
-<header class="auth-header"><a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="68" height="68"><span>Staff space</span></a><a href="{% url 'staff:dashboard' %}">Timesheet preview <span aria-hidden="true">↗</span></a></header>
+<header class="auth-header"><a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="68" height="68"><span>Staff space</span></a><a href="{% url 'staff:dashboard' %}">{% if portal_preview %}Timesheet preview{% else %}Staff sign in{% endif %} <span aria-hidden="true">↗</span></a></header>
 {% endif %}
 <main id="main" class="{% if portal_staff %}workspace{% else %}auth-main{% endif %}" tabindex="-1">
   {% if messages %}<div class="messages" aria-live="polite">{% for message in messages %}<div class="notice {{ message.tags }}" role="status" tabindex="-1">{% if message.tags == 'success' %}<span class="notice-symbol" aria-hidden="true">✓</span>{% endif %}{{ message }}</div>{% endfor %}</div>{% endif %}
   {% if portal_staff %}<div id="session-warning" class="notice warning" hidden>Your session will expire soon. Save your changes, or <button id="keep-session" class="text-button" type="button">keep working</button>.</div>{% endif %}
   {% if portal_preview and portal_staff %}<section class="preview-switch no-print" aria-label="Explore demo roles"><div><strong>Explore the workflow</strong><small>Switch between fictional accounts</small></div><form method="post" action="{% url 'staff:switch_role' %}">{% csrf_token %}<label class="sr-only" for="preview-role">Preview role</label><select id="preview-role" name="role"><option value="employee" {% if portal_staff.role == 'employee' %}selected{% endif %}>Employee</option><option value="finance" {% if portal_staff.role == 'finance' %}selected{% endif %}>Finance</option><option value="administrator" {% if portal_staff.role == 'administrator' %}selected{% endif %}>Administrator</option></select><button class="button secondary">Switch view</button></form></section>{% endif %}
   {% block content %}{% endblock %}
-  <footer class="page-footer"><span>Geeza Break · Supporting families, together.</span><span>Staff portal{% if portal_preview %} · Review demo{% elif portal_local %} · Local preview{% endif %}</span></footer>
+  <footer class="page-footer"><span>Geeza Break · Supporting families, together.</span><span>Staff portal{% if portal_preview %} · Review demo{% elif portal_local %} · Local development{% endif %}</span></footer>
 </main>
 <div id="action-feedback" class="action-feedback" role="status" aria-live="polite" aria-atomic="true"></div>
 </body>

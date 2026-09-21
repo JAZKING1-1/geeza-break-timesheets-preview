@@ -28,9 +28,9 @@ class MonthForm(forms.Form):
     month = forms.DateField(input_formats=["%Y-%m"], widget=forms.DateInput(format="%Y-%m", attrs={"type": "month"}))
 
 
-class YearForm(forms.Form):
-    year = forms.IntegerField(label="Calendar year", min_value=1, max_value=9999,
-                              widget=forms.NumberInput(attrs={"inputmode": "numeric"}))
+class WorkDateForm(forms.Form):
+    work_date = forms.DateField(label="Date worked", input_formats=["%Y-%m-%d"],
+                               widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
 
 
 class EntryForm(forms.ModelForm):

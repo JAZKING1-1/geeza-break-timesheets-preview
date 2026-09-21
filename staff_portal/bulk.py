@@ -1,6 +1,5 @@
 """Accessible monthly entry forms and atomic batch editing."""
 import calendar
-import datetime as dt
 
 from django import forms
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -18,7 +17,8 @@ ENTRY_FIELDS = ("date", "start_time", "end_date", "end_time", "break_minutes",
 
 class RowForm(forms.Form):
     entry_id = forms.IntegerField(required=False, min_value=1, widget=forms.HiddenInput())
-    date = forms.TypedChoiceField(label="Date", coerce=dt.date.fromisoformat)
+    date = forms.DateField(label="Date worked", input_formats=["%Y-%m-%d"],
+                          widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
     category = forms.ModelChoiceField(label="Service / work type", queryset=WorkCategory.objects.none(), empty_label="Choose service / work type")
     start_time = forms.TimeField(label="Start", input_formats=["%H:%M"], widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
     end_time = forms.TimeField(label="Finish", input_formats=["%H:%M"], widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
@@ -35,11 +35,18 @@ class RowForm(forms.Form):
 
     def __init__(self, *args, month, categories, **kwargs):
         super().__init__(*args, **kwargs)
-        days = [month.replace(day=day) for day in range(1, calendar.monthrange(month.year, month.month)[1] + 1)]
-        self.fields["date"].choices = [("", "Choose date")] + [(day.isoformat(), day.strftime("%a %d %b")) for day in days]
+        self.month = month
+        last_day = month.replace(day=calendar.monthrange(month.year, month.month)[1])
+        self.fields["date"].widget.attrs.update({"min": month.isoformat(), "max": last_day.isoformat()})
         self.fields["category"].queryset = categories
         for name, field in self.fields.items():
             field.widget.attrs["aria-describedby"] = f"entry-help id_{self.prefix}-{name}_error"
+
+    def clean_date(self):
+        day = self.cleaned_data["date"]
+        if day.replace(day=1) != self.month:
+            raise ValidationError("Choose a date in this timesheet's month. To change month or year, use Date worked above the rows.")
+        return day
 
     def clean(self):
         data = super().clean()
@@ -51,7 +58,7 @@ RowFormSet = forms.formset_factory(RowForm, extra=1, can_delete=True, max_num=MA
                                   validate_max=True, absolute_max=MAX_ROWS)
 
 
-def monthly_formset(sheet, data=None):
+def monthly_formset(sheet, data=None, selected_date=None):
     entries = list(sheet.entries.all())
     categories = WorkCategory.objects.filter(Q(active=True) | Q(pk__in=[e.category_id for e in entries]))
     initial = []
@@ -62,8 +69,11 @@ def monthly_formset(sheet, data=None):
         # Same-day shifts follow the selected date unless overnight is explicitly set.
         row["end_date"] = entry.end_date if entry.end_date != entry.date else None
         initial.append(row)
-    return RowFormSet(data=data, prefix="rows", initial=initial,
-                      form_kwargs={"month": sheet.month, "categories": categories})
+    formset = RowFormSet(data=data, prefix="rows", initial=initial,
+                        form_kwargs={"month": sheet.month, "categories": categories})
+    if data is None and selected_date and selected_date.replace(day=1) == sheet.month and formset.extra_forms:
+        formset.extra_forms[0].initial["date"] = selected_date
+    return formset
 
 
 class RowErrors(ValidationError):
