@@ -75,7 +75,7 @@ def delete_entry(actor, sheet_id, revision, entry_id):
 
 
 @transaction.atomic
-def transition(actor, sheet_id, revision, action, reason=""):
+def transition(actor, sheet_id, revision, action, reason="", *, notify=True):
     sheet, profile = locked_sheet(actor, sheet_id, revision)
     reason = reason.strip()
     if len(reason) > 500:
@@ -83,7 +83,7 @@ def transition(actor, sheet_id, revision, action, reason=""):
     if action == "submit":
         if sheet.staff.user_id != actor.pk or not sheet.editable:
             raise PermissionDenied
-        return submit_locked_sheet(actor, sheet)
+        return submit_locked_sheet(actor, sheet, notify=notify)
     elif action in ("approve", "return", "reopen"):
         if not profile.can_review or sheet.staff.user_id == actor.pk:
             raise PermissionDenied
@@ -104,7 +104,7 @@ def transition(actor, sheet_id, revision, action, reason=""):
     return sheet
 
 
-def submit_locked_sheet(actor, sheet):
+def submit_locked_sheet(actor, sheet, *, notify=True):
     """Called only inside a transaction after ownership, status and revision checks."""
     from .notifications import queue_submission
     if not sheet.entries.exists():
@@ -116,5 +116,6 @@ def submit_locked_sheet(actor, sheet):
     sheet.reviewed_by = None
     sheet.save()
     audit(actor, "Submitted", sheet.staff, sheet, total_minutes=sheet.total_minutes)
-    queue_submission(sheet)
+    if notify:
+        queue_submission(sheet)
     return sheet

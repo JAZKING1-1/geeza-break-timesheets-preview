@@ -117,3 +117,25 @@ class PrivatePreviewTests(TestCase):
                 "assert s.DEBUG is False; assert s.SESSION_COOKIE_SECURE and s.CSRF_COOKIE_SECURE")
         result = subprocess.run([sys.executable, "-c", code], cwd=settings.BASE_DIR, env=env, capture_output=True)
         self.assertEqual(result.returncode, 0)
+
+    def test_explicit_claim_email_configuration_keeps_account_email_isolated(self):
+        env = {**os.environ, "APP_ENV": "preview", "DJANGO_SECRET_KEY": "x" * 64,
+               "PREVIEW_ACCESS_CODE": CODE, "RENDER_EXTERNAL_HOSTNAME": "preview.example.test",
+               "TIMESHEET_EMAIL_DELIVERY": "mailjet", "TIMESHEET_MAILJET_API_KEY": "fake-test-key",
+               "TIMESHEET_MAILJET_API_SECRET": "fake-test-secret",
+               "TIMESHEET_FROM_EMAIL": "sender@example.org", "TIMESHEET_NOTIFICATION_EMAIL": "reviewer@example.org"}
+        code = ("from config import settings as s; "
+                "assert s.MAILJET_API_KEY == s.MAILJET_API_SECRET == ''; "
+                "assert s.TIMESHEET_EMAIL_DELIVERY == 'mailjet'; "
+                "assert s.TIMESHEET_MAILJET_API_KEY == 'fake-test-key'; "
+                "assert s.TIMESHEET_NOTIFICATION_EMAIL == 'reviewer@example.org'; "
+                "assert s.TIMESHEET_FROM_EMAIL == 'sender@example.org'; "
+                "assert s.EMAIL_BACKEND == 'django.core.mail.backends.filebased.EmailBackend'")
+        result = subprocess.run([sys.executable, "-c", code], cwd=settings.BASE_DIR, env=env, capture_output=True)
+        self.assertEqual(result.returncode, 0)
+        for incomplete in ["reviewer@geezabreak", "", "reviewer@example.test"]:
+            with self.subTest(recipient=incomplete):
+                env["TIMESHEET_NOTIFICATION_EMAIL"] = incomplete
+                result = subprocess.run([sys.executable, "-c", "from config import settings"],
+                                        cwd=settings.BASE_DIR, env=env, capture_output=True)
+                self.assertNotEqual(result.returncode, 0)

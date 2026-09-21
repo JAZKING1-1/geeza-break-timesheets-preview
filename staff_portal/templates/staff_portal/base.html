@@ -7,12 +7,13 @@
   <link rel="icon" href="{% static 'images/thumbnail_LOGO.png' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/portal.css' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/comfort.css' %}">
+  <link rel="stylesheet" href="{% static 'staff_portal/calendar.css' %}">
   <script defer src="{% static 'staff_portal/portal.js' %}"></script>
   {% if captcha_action and not captcha_simulated and not portal_preview %}<script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>{% endif %}
 </head>
 <body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}">
 <a class="skip" href="#main">Skip to content</a>
-{% if portal_preview %}<div class="local-banner preview-banner"><span class="local-dot"></span><strong>PRIVATE REVIEW</strong><span>Fictional data only · Emails are previews · Demo may reset</span></div>{% elif portal_local %}<div class="local-banner"><span class="local-dot"></span><strong>LOCAL PREVIEW</strong><span>Test data · {% if notification_preview %}Emails stay on this computer{% else %}Submission email enabled{% endif %} · CAPTCHA simulated</span></div>{% endif %}
+{% if portal_preview %}<div class="local-banner preview-banner"><span class="local-dot"></span><strong>PRIVATE REVIEW</strong><span>Fictional data only · {% if notification_preview %}Emails are previews{% else %}Claim emails enabled{% endif %} · Demo may reset</span></div>{% elif portal_local %}<div class="local-banner"><span class="local-dot"></span><strong>LOCAL PREVIEW</strong><span>Test data · {% if notification_preview %}Emails stay on this computer{% else %}Submission email enabled{% endif %} · CAPTCHA simulated</span></div>{% endif %}
 {% if portal_staff %}
 <aside class="sidebar">
   <a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="72" height="72"><span>Staff space<small>A little time, well spent.</small></span></a>

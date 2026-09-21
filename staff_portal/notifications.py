@@ -12,13 +12,14 @@ from .models import SubmissionNotification
 
 
 def queue_submission(sheet):
+    review_prefix = "[Review demo] " if settings.PORTAL_PREVIEW else ""
     local_note = ("\nLocal preview: this link opens only on the computer running the website.\n"
                   if settings.PORTAL_LOCAL else "")
     url = settings.PORTAL_BASE_URL.rstrip("/") + reverse("staff:sheet", args=[sheet.pk])
     notice, created = SubmissionNotification.objects.get_or_create(
         timesheet=sheet, revision=sheet.revision,
         defaults={"recipient": settings.TIMESHEET_NOTIFICATION_EMAIL,
-                  "subject": f"Geeza Break: timesheet ready for review - {sheet.month:%B %Y}",
+                  "subject": f"{review_prefix}Geeza Break: timesheet ready for review - {sheet.month:%B %Y}",
                   "body": (f"{sheet.staff.name} has submitted their {sheet.month:%B %Y} timesheet.\n\n"
                            f"Recorded time: {sheet.total_display}\n"
                            f"Sign in with a finance or administrator account to review it:\n{url}\n"
@@ -48,7 +49,7 @@ def deliver_notification(notice_id):
             response = requests.post("https://api.mailjet.com/v3.1/send",
                 auth=(settings.TIMESHEET_MAILJET_API_KEY, settings.TIMESHEET_MAILJET_API_SECRET),
                 timeout=(5, 15), json={"Messages": [{
-                    "From": {"Email": settings.DEFAULT_FROM_EMAIL, "Name": "Geeza Break"},
+                    "From": {"Email": settings.TIMESHEET_FROM_EMAIL, "Name": "Geeza Break Timesheets"},
                     "To": [{"Email": notice.recipient}],
                     "Subject": notice.subject, "TextPart": notice.body,
                 }]})

@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from staff_portal.models import StaffProfile, TimeEntry, Timesheet, WorkCategory
 from staff_portal.services import save_entry, transition
+from staff_portal.service_catalog import sync_service_catalog
 
 
 class Command(BaseCommand):
@@ -19,8 +20,7 @@ class Command(BaseCommand):
             raise CommandError("The review seed requires an explicit preview configuration and private access code.")
         if StaffProfile.objects.filter(is_demo=False).exists():
             raise CommandError("Refusing to seed a database containing real staff profiles.")
-        for category in ["Family Support", "Respite", "Administration", "Project Work", "Training", "Other"]:
-            WorkCategory.objects.get_or_create(name=category)
+        sync_service_catalog()
         profiles = {}
         for role, name, title in [
             ("employee", "Alex Morgan (demo)", "Family Support Worker"),
@@ -51,7 +51,7 @@ class Command(BaseCommand):
                     start_time=dt.time(9), end_time=dt.time(17), break_minutes=30,
                     category=category, notes="Fictional support shift for the review demo."))
             if status != "draft":
-                sheet = transition(profile.user, sheet.pk, 3, "submit")
+                sheet = transition(profile.user, sheet.pk, 3, "submit", notify=False)
             if status == "approved":
                 transition(profiles["finance"].user, sheet.pk, sheet.revision, "approve")
         self.stdout.write("Fictional review accounts are ready. No access codes are printed or embedded in pages.")

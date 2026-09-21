@@ -1,0 +1,31 @@
+<section class="year-calendar" aria-labelledby="calendar-heading" id="year-calendar">
+  <div class="section-heading">
+    <div><span class="eyebrow">JANUARY TO DECEMBER</span><h2 id="calendar-heading">Your {{ calendar_year }} calendar</h2><p>Choose any month to record or review your shifts.</p></div>
+    <form method="get" action="{% url 'staff:dashboard' %}#year-calendar" class="calendar-year-form">
+      <label for="{{ year_form.year.id_for_label }}">Calendar year</label>
+      <div>{{ year_form.year }}<button class="button secondary">Show year</button></div>
+      {% for error in year_form.year.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+    </form>
+  </div>
+  <nav class="calendar-nav" aria-label="Calendar years">
+    {% if previous_year %}<a href="?year={{ previous_year }}#year-calendar">← {{ previous_year }}</a>{% endif %}
+    <a href="?year={{ current_year }}#year-calendar">Current year</a>
+    {% if next_year %}<a href="?year={{ next_year }}#year-calendar">{{ next_year }} →</a>{% endif %}
+  </nav>
+  <p class="calendar-key"><span><span class="day-example today-example" aria-hidden="true">21</span> Today (outlined)</span><span><span class="day-example worked-example" aria-hidden="true">●</span> Saved shift (dot)</span></p>
+  <div class="calendar-months">
+    {% for item in calendar_months %}
+    <article class="calendar-month{% if item.is_current %} current-month{% endif %}" aria-labelledby="month-{{ forloop.counter }}">
+      <div class="calendar-month-heading"><h3 id="month-{{ forloop.counter }}">{{ item.month|date:"F" }}</h3>{% if item.is_current %}<span class="calendar-current">This month</span>{% endif %}</div>
+      <div class="calendar-month-status">{% if item.sheet %}<span class="status {{ item.sheet.status }}">{{ item.sheet.get_status_display }}</span><strong>{{ item.sheet.total_display }}</strong>{% else %}<span class="status">Not started</span><span>0h 00m</span>{% endif %}</div>
+      <table class="mini-calendar">
+        <caption class="sr-only">{{ item.month|date:"F Y" }} — saved shift dates</caption>
+        <thead><tr><th scope="col"><abbr title="Monday">Mo</abbr></th><th scope="col"><abbr title="Tuesday">Tu</abbr></th><th scope="col"><abbr title="Wednesday">We</abbr></th><th scope="col"><abbr title="Thursday">Th</abbr></th><th scope="col"><abbr title="Friday">Fr</abbr></th><th scope="col"><abbr title="Saturday">Sa</abbr></th><th scope="col"><abbr title="Sunday">Su</abbr></th></tr></thead>
+        <tbody>{% for week in item.weeks %}<tr>{% for day in week %}<td>{% if day.number %}<span class="calendar-day{% if day.today %} is-today{% endif %}{% if day.shifts %} has-shifts{% endif %}"{% if day.today %} aria-current="date"{% endif %}>{{ day.number }}{% if day.today %}<span class="sr-only">, today</span>{% endif %}{% if day.shifts %}<span class="sr-only">, {{ day.shifts }} saved shift{{ day.shifts|pluralize }}</span>{% endif %}</span>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+      {% if item.sheet %}<a class="button secondary calendar-open" href="{% url 'staff:sheet' item.sheet.pk %}" aria-label="Open {{ item.month|date:'F Y' }}">Open {{ item.month|date:"F" }} <span aria-hidden="true">→</span></a>
+      {% else %}<form method="post" action="{% url 'staff:new_sheet' %}" class="calendar-open">{% csrf_token %}<input type="hidden" name="month" value="{{ item.month|date:'Y-m' }}"><button class="button secondary" aria-label="Start {{ item.month|date:'F Y' }}">Start {{ item.month|date:"F" }} <span aria-hidden="true">＋</span></button></form>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>

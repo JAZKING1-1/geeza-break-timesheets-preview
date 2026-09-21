@@ -28,6 +28,11 @@ class MonthForm(forms.Form):
     month = forms.DateField(input_formats=["%Y-%m"], widget=forms.DateInput(format="%Y-%m", attrs={"type": "month"}))
 
 
+class YearForm(forms.Form):
+    year = forms.IntegerField(label="Calendar year", min_value=1, max_value=9999,
+                              widget=forms.NumberInput(attrs={"inputmode": "numeric"}))
+
+
 class EntryForm(forms.ModelForm):
     revision = forms.IntegerField(widget=forms.HiddenInput())
     class Meta:
@@ -43,7 +48,7 @@ class EntryForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 3, "maxlength": 500}),
         }
         labels = {"date": "Start date", "break_minutes": "Unpaid break (minutes)",
-                  "category": "Work category", "start_fold": "Start time occurrence",
+                  "category": "Service / work type", "start_fold": "Start time occurrence",
                   "end_fold": "End time occurrence"}
         help_texts = {"notes": "Optional. Do not include family names, addresses or sensitive care details.",
                       "end_date": "Usually the start date. Change this for an overnight shift."}

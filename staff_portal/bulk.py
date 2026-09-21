@@ -19,7 +19,7 @@ ENTRY_FIELDS = ("date", "start_time", "end_date", "end_time", "break_minutes",
 class RowForm(forms.Form):
     entry_id = forms.IntegerField(required=False, min_value=1, widget=forms.HiddenInput())
     date = forms.TypedChoiceField(label="Date", coerce=dt.date.fromisoformat)
-    category = forms.ModelChoiceField(label="Work type", queryset=WorkCategory.objects.none(), empty_label="Choose work type")
+    category = forms.ModelChoiceField(label="Service / work type", queryset=WorkCategory.objects.none(), empty_label="Choose service / work type")
     start_time = forms.TimeField(label="Start", input_formats=["%H:%M"], widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
     end_time = forms.TimeField(label="Finish", input_formats=["%H:%M"], widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
     break_minutes = forms.IntegerField(label="Break (min)", min_value=0, max_value=1439, initial=0,

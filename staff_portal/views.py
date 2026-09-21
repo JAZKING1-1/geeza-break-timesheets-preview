@@ -17,7 +17,8 @@ from django.views.decorators.http import require_POST
 
 from .accounts import issue_link
 from .bulk import MAX_ROWS, RowErrors, monthly_formset, save_month
-from .forms import EntryForm, MonthForm, ProfileForm
+from .calendar_view import annual_calendar
+from .forms import EntryForm, MonthForm, ProfileForm, YearForm
 from .models import AuditEvent, PasswordLink, StaffProfile, TimeEntry, Timesheet
 from .security import portal_required
 from .services import audit, delete_entry, hours_decimal, save_entry, transition
@@ -47,11 +48,18 @@ def permitted_sheet(request, pk):
 @portal_required()
 def dashboard(request):
     month = month_value(request.GET.get("month"))
-    sheets = Timesheet.objects.filter(staff=request.staff).prefetch_related("entries")
-    current = sheets.filter(month=month).first()
+    today = timezone.localdate()
+    year_form = YearForm(request.GET if "year" in request.GET else None, initial={"year": month.year})
+    year = year_form.cleaned_data["year"] if year_form.is_bound and year_form.is_valid() else month.year
+    month = month.replace(year=year)
+    sheets = list(Timesheet.objects.filter(staff=request.staff, month__year=year).prefetch_related("entries"))
+    current = next((item for item in sheets if item.month == month), None)
     return render(request, "staff_portal/dashboard.html", {
         "current": current, "sheets": sheets, "month": month,
-        "month_form": MonthForm(initial={"month": month}),
+        "year_form": year_form, "calendar_year": year, "current_year": today.year,
+        "previous_year": year - 1 if year > 1 else None,
+        "next_year": year + 1 if year < 9999 else None,
+        "calendar_months": annual_calendar(year, sheets, today),
         "pending_count": Timesheet.objects.filter(status="submitted").exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 

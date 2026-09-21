@@ -111,10 +111,27 @@ EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend" if PORTAL_PRE
 DEFAULT_FROM_EMAIL = "preview@example.test" if PORTAL_PREVIEW else os.getenv("DEFAULT_FROM_EMAIL", "")
 MAILJET_API_KEY = "" if PORTAL_PREVIEW else os.getenv("MAILJET_API_KEY", "")
 MAILJET_API_SECRET = "" if PORTAL_PREVIEW else os.getenv("MAILJET_API_SECRET", "")
-TIMESHEET_MAILJET_API_KEY = MAILJET_API_KEY
-TIMESHEET_MAILJET_API_SECRET = MAILJET_API_SECRET
-TIMESHEET_EMAIL_DELIVERY = "preview" if PORTAL_PREVIEW else "mailjet"
-TIMESHEET_NOTIFICATION_EMAIL = "finance@example.test" if PORTAL_PREVIEW else os.getenv("TIMESHEET_NOTIFICATION_EMAIL", "")
+# Claim notifications can be explicitly enabled in the separate review portal.
+# General/invitation email remains isolated in preview, even with inherited live keys.
+TIMESHEET_EMAIL_DELIVERY = os.getenv("TIMESHEET_EMAIL_DELIVERY", "preview" if PORTAL_PREVIEW else "mailjet")
+if TIMESHEET_EMAIL_DELIVERY not in {"preview", "mailjet"}:
+    raise ImproperlyConfigured("Choose preview or mailjet for TIMESHEET_EMAIL_DELIVERY.")
+TIMESHEET_MAILJET_API_KEY = os.getenv("TIMESHEET_MAILJET_API_KEY", MAILJET_API_KEY) if TIMESHEET_EMAIL_DELIVERY == "mailjet" else ""
+TIMESHEET_MAILJET_API_SECRET = os.getenv("TIMESHEET_MAILJET_API_SECRET", MAILJET_API_SECRET) if TIMESHEET_EMAIL_DELIVERY == "mailjet" else ""
+TIMESHEET_FROM_EMAIL = os.getenv("TIMESHEET_FROM_EMAIL", DEFAULT_FROM_EMAIL)
+TIMESHEET_NOTIFICATION_EMAIL = os.getenv("TIMESHEET_NOTIFICATION_EMAIL", "finance@example.test" if PORTAL_PREVIEW else "")
+if TIMESHEET_EMAIL_DELIVERY == "mailjet":
+    from django.core.exceptions import ValidationError
+    from django.core.validators import validate_email
+    if not all([TIMESHEET_MAILJET_API_KEY, TIMESHEET_MAILJET_API_SECRET]):
+        raise ImproperlyConfigured("Configure the timesheet Mailjet credentials before enabling delivery.")
+    try:
+        validate_email(TIMESHEET_FROM_EMAIL)
+        validate_email(TIMESHEET_NOTIFICATION_EMAIL)
+        if any(address.lower().endswith(".test") for address in [TIMESHEET_FROM_EMAIL, TIMESHEET_NOTIFICATION_EMAIL]):
+            raise ValidationError("Use confirmed deliverable addresses.")
+    except ValidationError as exc:
+        raise ImproperlyConfigured("Configure a verified timesheet sender and a complete notification email address.") from exc
 LOGGING = {
     "version": 1, "disable_existing_loggers": False,
     "filters": {"redact_links": {"()": "staff_portal.log_filters.RedactAccountLinks"}},

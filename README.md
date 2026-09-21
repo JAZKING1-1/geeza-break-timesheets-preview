@@ -8,7 +8,8 @@ no copied Git history, no real staff roster, no payroll database and no Mailjet 
 
 1. Open the hosted link on a phone, tablet or computer.
 2. Choose **Employee** and enter the private review code shared by the project owner.
-3. Open the current month. Enter each shift in a horizontal row with date, work type,
+3. Choose any of the twelve months in the annual calendar, or change the year. Saved
+   shift dates have a dot; each month shows its total and status. Enter each shift in a horizontal row with date, service / work type,
    start/finish, break and purpose. On a phone, swipe across the grid; the date stays
    visible. The saved total and save/submit controls stay below the grid.
 4. Save a draft or submit the complete timesheet in one action.
@@ -60,9 +61,48 @@ redeploy. The next start restores fictional sample data. First visits after slee
 take about a minute. See [Render's free service limits](https://render.com/docs/free).
 Use this link for design/workflow review, not payroll record keeping.
 
-Email is always written to private preview files in review mode, even if Mailjet keys
-exist in the environment. No real inbox receives the demo notifications. Real account
-invitations are disabled. The preview contains no connection to the main website database.
+Email defaults to private preview files, even if general Mailjet keys exist in the
+environment. Real account invitations remain disabled. The preview contains no connection
+to the main website database.
+
+## Services and calendar
+
+The January–December overview works across years and includes correct leap-year dates.
+It shows only the signed-in employee's saved shifts. Opening a month uses the existing
+ownership-protected monthly editor; simply browsing a year does not create records.
+
+Service names were checked on 21 September 2026 against the public
+[services page](https://www.geezabreak.org.uk/services/) and
+[referral options](https://www.geezabreak.org.uk/referral/): Family Support, Respite Sitting,
+Respite Care, Geeza Chance, Family Support Group Work and Kinship Care. Administration,
+Project Work, Training and Other remain available for internal work. The previous generic
+Respite option is retained on historical records and retired for new shifts.
+`bootstrap_preview` synchronises this catalogue without relabelling historical entries.
+
+The existing date, service, start/finish, break, purpose and calculated-total layout is
+consistent with the basic structure of [Microsoft's timesheet templates](https://excel.cloud.microsoft/create/en/timesheet-templates/).
+This is an hours/approval workflow, not a wage or overtime calculator.
+
+## Optional claim notification email
+
+On this separate Render service, set the following **private environment variables**:
+
+- `TIMESHEET_EMAIL_DELIVERY=mailjet`
+- `TIMESHEET_MAILJET_API_KEY` and `TIMESHEET_MAILJET_API_SECRET`: working Mailjet credentials.
+- `TIMESHEET_FROM_EMAIL`: an active, verified Mailjet sender address.
+- `TIMESHEET_NOTIFICATION_EMAIL`: the complete, confirmed reviewer email address.
+
+Keep delivery set to `preview` until the credentials and addresses have been verified.
+The application refuses incomplete email configuration when Mailjet delivery is selected.
+This explicit opt-in sends only submission/resubmission notifications to the configured
+reviewer. Drafts do not send email. Seed data never queues or sends emails on startup or
+redeployment. Account emails still remain local in review mode; demo subjects are marked
+`[Review demo]`. No keys are committed and no original website configuration is changed.
+
+Mailjet acceptance or failure is shown on the submitted timesheet. A delivery failure
+does not undo the saved claim or resend it automatically; Mailjet acceptance does not
+guarantee inbox arrival. `send_timesheet_notifications` processes pending notices after
+an interrupted request, without retrying completed or uncertain sends.
 
 ## Checks
 
