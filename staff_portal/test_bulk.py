@@ -161,14 +161,14 @@ class MonthlyEditorTests(TestCase):
 
     @override_settings(TIMESHEET_EMAIL_DELIVERY="mailjet", TIMESHEET_MAILJET_API_KEY="test-key",
                        TIMESHEET_MAILJET_API_SECRET="test-secret")
-    @patch("staff_portal.notifications.requests.post")
+    @patch("staff_portal.notifications.Client")
     def test_mailjet_receives_only_intended_recipient_once(self, send):
-        send.return_value = Mock(json=lambda: {"Messages": [{"Status": "success"}]})
+        send.return_value.send.create.return_value = Mock(json=lambda: {"Messages": [{"Status": "success"}]})
         with self.captureOnCommitCallbacks(execute=True):
             self.post([self.row()], "submit")
         notice = SubmissionNotification.objects.get()
         self.assertEqual(notice.status, "sent")
-        payload = send.call_args.kwargs["json"]["Messages"][0]
+        payload = send.return_value.send.create.call_args.kwargs["data"]["Messages"][0]
         self.assertEqual(payload["To"], [{"Email": "dev@example.test"}])
         self.assertNotIn("Cc", payload)
         self.assertNotIn("Bcc", payload)
@@ -177,7 +177,7 @@ class MonthlyEditorTests(TestCase):
 
     @override_settings(TIMESHEET_EMAIL_DELIVERY="mailjet", TIMESHEET_MAILJET_API_KEY="test-key",
                        TIMESHEET_MAILJET_API_SECRET="test-secret")
-    @patch("staff_portal.notifications.requests.post", side_effect=TimeoutError)
+    @patch("staff_portal.notifications.Client", side_effect=TimeoutError)
     def test_email_failure_does_not_lose_timesheet_or_resend_automatically(self, send):
         with self.captureOnCommitCallbacks(execute=True):
             self.assertEqual(self.post([self.row()], "submit").status_code, 302)

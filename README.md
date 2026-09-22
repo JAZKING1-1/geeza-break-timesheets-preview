@@ -96,7 +96,23 @@ The existing date, service, start/finish, break, purpose and calculated-total la
 consistent with the basic structure of [Microsoft's timesheet templates](https://excel.cloud.microsoft/create/en/timesheet-templates/).
 This is an hours/approval workflow, not a wage or overtime calculator.
 
-## Optional claim notification email
+## Submission email with Excel attachment
+
+When a member of staff chooses **Submit timesheet**, the server generates a real
+`.xlsx` file and queues one email to the configured reviewer. For this rollout the
+recipient is `devansh.sharma@geezabreak.org.uk`. The workbook contains the employee,
+claim month, submission reference, dated shifts, service, start/finish, unpaid breaks,
+purposes and total worked hours. It is a submitted claim, not a payment approval.
+Draft saves do not send email.
+
+Delivery follows the official referral mailer's `mailjet_rest.Client` / `send.create`
+workflow, using the Mailjet v3.1 attachment format. This is a separate implementation
+in this repository: it never imports, calls or changes the original website.
+Only the configured reviewer receives timesheet emails; referral recipients are not copied.
+The Excel bytes are saved with the notification inside the submission transaction,
+so delayed delivery cannot attach later edits. Staff text is written as plain text,
+not executable spreadsheet formulas or hyperlinks. Clock-change hours come from the
+validated worked minutes, and cached totals work in email/mobile viewers.
 
 On this separate Render service, set the following **private environment variables**:
 
@@ -104,6 +120,12 @@ On this separate Render service, set the following **private environment variabl
 - `TIMESHEET_MAILJET_API_KEY` and `TIMESHEET_MAILJET_API_SECRET`: working Mailjet credentials.
 - `TIMESHEET_FROM_EMAIL`: an active, verified Mailjet sender address.
 - `TIMESHEET_NOTIFICATION_EMAIL`: the complete, confirmed reviewer email address.
+
+The existing referral Mailjet account can be reused: copy its working private
+`MAILJET_API_KEY` and `MAILJET_API_SECRET` values into this service's two
+`TIMESHEET_MAILJET_*` variables. Leave the original service unchanged. Do not paste
+the values into source files or chat. The local referral source only reads these
+values from its environment; it does not contain the live hosting secrets.
 
 Keep delivery set to `preview` until the credentials and addresses have been verified.
 The application refuses incomplete email configuration when Mailjet delivery is selected.
@@ -116,6 +138,9 @@ Mailjet acceptance or failure is shown on the submitted timesheet. A delivery fa
 does not undo the saved claim or resend it automatically; Mailjet acceptance does not
 guarantee inbox arrival. `send_timesheet_notifications` processes pending notices after
 an interrupted request, without retrying completed or uncertain sends.
+Old queued notices without an Excel snapshot fail safely instead of attaching a
+potentially different current timesheet. Previously sent notices are not re-sent.
+Local previews include the same MIME attachment, but never send email.
 
 ## Checks
 

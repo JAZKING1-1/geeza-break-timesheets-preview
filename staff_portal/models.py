@@ -203,6 +203,8 @@ class SubmissionNotification(models.Model):
     recipient = models.EmailField(blank=True)
     subject = models.CharField(max_length=200)
     body = models.TextField()
+    attachment_name = models.CharField(max_length=160, blank=True)
+    attachment_content = models.BinaryField(default=bytes, editable=False)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
     detail = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

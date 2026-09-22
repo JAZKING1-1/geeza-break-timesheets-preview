@@ -90,7 +90,7 @@ class WorkDatePickerTests(TestCase):
                    TIMESHEET_MAILJET_API_SECRET="test-secret", TIMESHEET_FROM_EMAIL="sender@example.org",
                    TIMESHEET_NOTIFICATION_EMAIL="reviewer@example.org")
 class SeedNotificationTests(TestCase):
-    @patch("staff_portal.notifications.requests.post")
+    @patch("staff_portal.notifications.Client")
     def test_fresh_start_and_repeat_bootstrap_never_queue_or_send_claim_emails(self, send):
         with self.captureOnCommitCallbacks(execute=True):
             call_command("bootstrap_preview", stdout=io.StringIO())

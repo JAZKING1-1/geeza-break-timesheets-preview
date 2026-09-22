@@ -17,3 +17,4 @@ sqlparse==0.6.0
 tzdata==2025.2
 urllib3==2.7.0
 whitenoise==6.9.0
+XlsxWriter==3.2.9
