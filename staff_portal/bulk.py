@@ -45,7 +45,7 @@ class RowForm(forms.Form):
     def clean_date(self):
         day = self.cleaned_data["date"]
         if day.replace(day=1) != self.month:
-            raise ValidationError("Choose a date in this timesheet's month. To change month or year, use Date worked above the rows.")
+            raise ValidationError("Choose a date in this timesheet's month. To change month or year, open Different month or year? above the entries.")
         return day
 
     def clean(self):

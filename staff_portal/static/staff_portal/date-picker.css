@@ -9,8 +9,16 @@
 .work-date-actions .button { flex:1 1 auto; }
 .work-date-actions [hidden] { display:none; }
 .row-field input[type=date] { min-width:0; width:100%; }
+.new-timesheet-action { display:flex; align-items:center; flex-wrap:wrap; gap:14px 24px; margin:0 0 28px; }
+.new-timesheet-action form { margin:0; }
+.new-timesheet-action .button { min-height:56px; font-size:18px; padding:12px 24px; }
+.new-timesheet-action p { flex:1 1 260px; margin:0; max-width:520px; font-size:16px; color:#405963; }
+.other-month { margin:0 0 20px; }
+.other-month > summary { cursor:pointer; min-height:48px; padding:10px 0; color:#005775; font-size:16px; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.other-month .work-date-picker { margin:8px 0 0; }
 body:not(.with-banner) .sidebar { top:0; }
 @media(max-width:560px) {
+  .new-timesheet-action form,.new-timesheet-action .button { width:100%; }
   .work-date-picker { padding:18px 16px; }
   .work-date-actions input { max-width:none; flex-basis:100%; }
   .work-date-actions .button { flex-basis:100%; }

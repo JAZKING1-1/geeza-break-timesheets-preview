@@ -7,15 +7,18 @@
 <section class="month-feature">
 <div><span class="eyebrow">YOUR MONTH AT A GLANCE</span><h2>{{ month|date:"F Y" }}</h2><p>Record your shifts, check your hours, then submit.</p>
 {% if current %}<div class="actions"><a class="button dark" href="{% url 'staff:sheet' current.pk %}">{% if current.editable %}Continue timesheet{% else %}View timesheet{% endif %} <span aria-hidden="true">→</span></a><span class="status {{ current.status }}">{{ current.get_status_display }}</span></div>
-{% else %}<form method="post" action="{% url 'staff:new_sheet' %}">{% csrf_token %}<input type="hidden" name="month" value="{{ month|date:'Y-m' }}"><button class="button dark">Start this month <span aria-hidden="true">＋</span></button></form>{% endif %}</div>
+{% endif %}</div>
 <div class="hours-display"><strong>{% if current %}{{ current.total_display }}{% else %}0h 00m{% endif %}</strong><span>HOURS RECORDED</span><small>{% if current and current.status == 'approved' %}Reviewed and approved{% else %}Your saved time so far{% endif %}</small></div>
 </section>
-{% include 'staff_portal/work_date_picker.html' %}
+<div class="new-timesheet-action" id="add-timesheet" tabindex="-1">
+  <form method="post" action="{% url 'staff:new_sheet' %}">{% csrf_token %}<input type="hidden" name="month" value="{{ month|date:'Y-m' }}"><button class="button primary" data-pending-label="Opening timesheet…">Add new timesheet <span aria-hidden="true">＋</span></button></form>
+  <p>Enter your dates, services and hours on the next page. You can choose another month there.</p>
+</div>
 <section class="panel">
 <div class="section-heading"><div><h2>My saved timesheets</h2><p>All your months and years, with hours and approval status.</p></div></div>
 <div class="table-scroll saved-timesheets" tabindex="0" role="region" aria-label="Your saved timesheets"><table><caption class="sr-only">Your monthly timesheets</caption><thead><tr><th>Month</th><th>Hours recorded</th><th>Status</th><th><span class="sr-only">Open</span></th></tr></thead><tbody>
 {% for item in sheets %}<tr><th scope="row">{{ item.month|date:"F Y" }}</th><td>{{ item.total_display }}</td><td><span class="status {{ item.status }}">{{ item.get_status_display }}</span></td><td><a class="table-link" href="{% url 'staff:sheet' item.pk %}" aria-label="Open {{ item.month|date:'F Y' }} timesheet">Open →</a></td></tr>
-{% empty %}<tr><td colspan="4"><div class="empty-state"><span aria-hidden="true">◷</span><h3>A fresh start.</h3><p>Your first timesheet will appear here. Start this month whenever you’re ready.</p></div></td></tr>{% endfor %}
+{% empty %}<tr><td colspan="4"><div class="empty-state"><span aria-hidden="true">◷</span><h3>No timesheets yet</h3><p>Choose Add new timesheet to record your first shift.</p></div></td></tr>{% endfor %}
 </tbody></table></div></section>
 <div class="small-tip"><span aria-hidden="true">✳</span><p><strong>A handy reminder.</strong> Save your shifts as you go. You can make changes until you submit your month for review.</p></div>
 {% endblock %}

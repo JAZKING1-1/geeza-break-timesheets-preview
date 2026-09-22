@@ -52,7 +52,7 @@
 {% if portal_staff %}
 <nav class="mobile-nav no-print" aria-label="Mobile navigation">
   <a href="{% url 'staff:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or own %}aria-current="page"{% endif %}><span aria-hidden="true">◷</span><span>My hours</span></a>
-  <a href="{% url 'staff:dashboard' %}#work-date-heading"><span aria-hidden="true">＋</span><span>Add work</span></a>
+  <a href="{% url 'staff:dashboard' %}#add-timesheet"><span aria-hidden="true">＋</span><span>Add work</span></a>
   {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span><span>Review</span></a>{% endif %}
   <details class="mobile-menu"><summary><span aria-hidden="true">☰</span><span>More</span></summary><div class="mobile-menu-panel"><strong>{{ portal_staff.name }}</strong><small>{{ portal_staff.get_role_display }}</small>
     {% if portal_staff.is_administrator %}<a href="{% url 'staff:staff_list' %}">Manage staff access</a>{% endif %}

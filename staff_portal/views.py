@@ -48,12 +48,10 @@ def permitted_sheet(request, pk):
 @portal_required()
 def dashboard(request):
     month = month_value(request.GET.get("month"))
-    today = timezone.localdate()
     sheets = list(Timesheet.objects.filter(staff=request.staff).prefetch_related("entries"))
     current = next((item for item in sheets if item.month == month), None)
     return render(request, "staff_portal/dashboard.html", {
         "current": current, "sheets": sheets, "month": month,
-        "work_date_form": WorkDateForm(initial={"work_date": today}),
         "pending_count": Timesheet.objects.filter(status="submitted").exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 
