@@ -17,7 +17,7 @@
       {% include "staff_portal/captcha.html" %}
       <button class="button primary full" type="submit">Sign in <span aria-hidden="true">→</span></button>
     </form>
-    <div class="login-help"><strong>First time here?</strong><p>Open your personal invitation link to choose a password. Need a hand? Speak to your staff administrator.</p></div>
+    <div class="login-help"><strong>First time here?</strong><p><a href="{% url 'staff:activate_account' %}">Set up your staff account</a> using your registered work email. You will receive a private link to choose your password.</p></div>
     <div class="privacy-note"><span aria-hidden="true">◇</span> Your timesheets are only shared with authorised reviewers.</div>
   </section>
 </div>

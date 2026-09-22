@@ -8,6 +8,7 @@ from django.contrib import auth, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import OperationalError, transaction
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -91,6 +92,35 @@ def second_factor(request):
     return render(request, "staff_portal/auth_form.html", {
         "form": form, "title": "One more step", "intro": "Enter your authenticator code or one of your saved recovery codes.",
         "button": "Verify and sign in"})
+
+
+def activate_account(request):
+    """Invite-only signup: the address must already be on the authorised staff roster."""
+    if settings.PORTAL_PREVIEW:
+        raise Http404
+    form = ResetForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        email = form.cleaned_data["email"].lower()
+        if request_limited(request, "activate", email, maximum=3, seconds=3600):
+            form.add_error(None, "Too many requests. Please try again in an hour.")
+        elif not verify_captcha(request, "activate"):
+            form.add_error(None, "Verification was unsuccessful. Please try again.")
+        else:
+            profile = StaffProfile.objects.filter(
+                Q(user__is_active=False) | Q(user__isnull=True),
+                email__iexact=email, enabled=True, is_demo=False).first()
+            if profile:
+                try:
+                    issue_link(profile, "setup")
+                except Exception:
+                    logger.warning("Account activation email could not be delivered.")
+            return render(request, "staff_portal/message.html", {
+                "title": "Check your email",
+                "intro": "If this address has been invited and needs activation, we have sent a personal setup link. It works once and expires in 24 hours. If you already have a password, sign in or use password recovery."})
+    return render(request, "staff_portal/auth_form.html", {
+        "form": form, "title": "Set up your staff account",
+        "intro": "Enter the work email your administrator has registered. We will email you a private link to choose your password.",
+        "button": "Email my setup link", "captcha_action": "activate"})
 
 
 def reset_password(request):

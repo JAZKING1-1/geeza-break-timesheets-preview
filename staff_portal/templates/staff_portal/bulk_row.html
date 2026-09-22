@@ -1,14 +1,14 @@
 <tr class="entry-row{% if row.DELETE.value %} pending-removal{% endif %}" data-entry-row>
-  <th scope="row" class="row-number"><span class="sr-only">Row </span><span data-row-number>{{ number }}</span>{{ row.entry_id }}</th>
+  <th scope="row" class="row-number"><span class="mobile-row-label">Shift </span><span data-row-number>{{ number }}</span>{{ row.entry_id }}</th>
   <td class="date-cell">
     {% include 'staff_portal/row_field.html' with field=row.date %}
     {% if row.non_field_errors %}<ul class="field-errors row-error" id="{{ row.prefix }}-errors">{% for error in row.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
   </td>
-  <td>{% include 'staff_portal/row_field.html' with field=row.category %}</td>
-  <td>{% include 'staff_portal/row_field.html' with field=row.start_time %}</td>
-  <td>{% include 'staff_portal/row_field.html' with field=row.end_time %}</td>
-  <td>{% include 'staff_portal/row_field.html' with field=row.break_minutes %}</td>
-  <td>
+  <td class="service-cell">{% include 'staff_portal/row_field.html' with field=row.category %}</td>
+  <td class="start-cell">{% include 'staff_portal/row_field.html' with field=row.start_time %}</td>
+  <td class="finish-cell">{% include 'staff_portal/row_field.html' with field=row.end_time %}</td>
+  <td class="break-cell">{% include 'staff_portal/row_field.html' with field=row.break_minutes %}</td>
+  <td class="purpose-cell">
     {% include 'staff_portal/row_field.html' with field=row.notes %}
     <p class="removal-note" {% if not row.DELETE.value %}hidden{% endif %}>Marked for removal. Untick Remove to keep this row.</p>
   </td>
@@ -23,5 +23,5 @@
       </div>
     </details>
   </td>
-  <td class="row-remove-cell"><label class="remove-row" for="{{ row.DELETE.id_for_label }}">{{ row.DELETE }}<span class="sr-only">Remove row {{ number }}</span></label></td>
+  <td class="row-remove-cell"><label class="remove-row" for="{{ row.DELETE.id_for_label }}">{{ row.DELETE }}<span class="remove-label">Remove<span class="sr-only"> row {{ number }}</span></span></label></td>
 </tr>

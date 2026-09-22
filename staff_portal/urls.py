@@ -1,11 +1,14 @@
 from django.urls import path
-from . import auth_views, views, preview
+from . import auth_views, views, preview, pwa
 
 app_name = "staff"
 urlpatterns = [
+    path("manifest.webmanifest", pwa.manifest, name="manifest"),
+    path("sw.js", pwa.service_worker, name="service_worker"),
     path("preview/role/", preview.switch_role, name="switch_role"),
     path("", views.dashboard, name="dashboard"),
     path("login/", auth_views.login, name="login"),
+    path("activate/", auth_views.activate_account, name="activate_account"),
     path("logout/", auth_views.logout, name="logout"),
     path("verify/", auth_views.second_factor, name="second_factor"),
     path("reset-password/", auth_views.reset_password, name="reset_password"),

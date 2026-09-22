@@ -13,7 +13,7 @@
 {% include 'staff_portal/work_date_picker.html' %}
 <section class="panel">
 <div class="section-heading"><div><h2>My saved timesheets</h2><p>All your months and years, with hours and approval status.</p></div></div>
-<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable timesheet table"><table><caption class="sr-only">Your monthly timesheets</caption><thead><tr><th>Month</th><th>Hours recorded</th><th>Status</th><th><span class="sr-only">Open</span></th></tr></thead><tbody>
+<div class="table-scroll saved-timesheets" tabindex="0" role="region" aria-label="Your saved timesheets"><table><caption class="sr-only">Your monthly timesheets</caption><thead><tr><th>Month</th><th>Hours recorded</th><th>Status</th><th><span class="sr-only">Open</span></th></tr></thead><tbody>
 {% for item in sheets %}<tr><th scope="row">{{ item.month|date:"F Y" }}</th><td>{{ item.total_display }}</td><td><span class="status {{ item.status }}">{{ item.get_status_display }}</span></td><td><a class="table-link" href="{% url 'staff:sheet' item.pk %}" aria-label="Open {{ item.month|date:'F Y' }} timesheet">Open →</a></td></tr>
 {% empty %}<tr><td colspan="4"><div class="empty-state"><span aria-hidden="true">◷</span><h3>A fresh start.</h3><p>Your first timesheet will appear here. Start this month whenever you’re ready.</p></div></td></tr>{% endfor %}
 </tbody></table></div></section>

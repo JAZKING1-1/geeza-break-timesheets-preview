@@ -22,18 +22,27 @@ Do not edit the original Geezabreak website, its database, service or `.org.uk` 
 This records hours and approvals for finance to process. It does not calculate wages
 or send payroll payments. Finance should validate the exported hours before payroll.
 
-## Hosting decision required before purchase
+## Free hosting setup still required
 
-Proposed dedicated infrastructure in Frankfurt: Starter web service, Basic-256mb
-Postgres with 1 GB storage. Render's published July 2026 example is about US$13/month
-for compute, plus US$0.30/GB/month storage, taxes and any usage beyond the included
-allowance. Confirm current pricing and the owner's spending approval before purchasing.
+The charity's target is no recurring hosting charge. No paid database or service has
+been purchased. Keep the separate Render web service on its Free plan. A dedicated
+Neon Free PostgreSQL database is compatible with the existing Django application and
+is proposed for persistent records; the owner still needs to connect an account.
+Neon's free quota currently includes 0.5 GB storage and 100 CU-hours per project per
+month. Monitor the allowance and arrange private backups before collecting real claims.
+Free hosting can sleep, so the first page load may take longer after inactivity.
 
-Sources: [Render cost model](https://render.com/articles/how-much-does-cloud-application-hosting-cost-for-small-businesses),
-[current pricing](https://render.com/pricing),
-[database recovery](https://render.com/docs/postgresql-backups).
-Free Render databases expire after 30 days and are unsuitable for permanent payroll
-records. The current SQLite review database is disposable; do not import its sample data.
+Sources: [Neon plans](https://neon.com/docs/introduction/plans),
+[Render free limits](https://render.com/docs/free).
+Render's free databases expire after 30 days. The current SQLite review database is
+disposable; neither is the intended permanent store for payroll records. Do not import
+fictional sample data into the new database. Firebase would require a separate backend
+migration; it is not connected by this implementation.
+
+The hosted service remains in review mode until persistent storage and a real
+Cloudflare Turnstile widget are configured. Submission email with Excel is already
+enabled and has been verified. Personal account activation is implemented but is
+intentionally unavailable in the disposable hosted review database.
 
 ## Required private configuration
 
@@ -41,7 +50,7 @@ Configure these on the separate service before switching `APP_ENV` to `productio
 
 | Setting | Value or source |
 | --- | --- |
-| `DATABASE_URL` | Internal URL of the new dedicated Postgres database |
+| `DATABASE_URL` | Private connection URL for the new dedicated PostgreSQL database, with TLS required for an external provider |
 | `DJANGO_SECRET_KEY` | Keep the existing strong private value |
 | `MAILJET_API_KEY`, `MAILJET_API_SECRET` | Working, verified Mailjet credentials for account invitations/recovery |
 | `DEFAULT_FROM_EMAIL` | An active sender in that Mailjet account |
@@ -55,15 +64,18 @@ Configure these on the separate service before switching `APP_ENV` to `productio
 | `BOOTSTRAP_OWNER_NAME` | `Devansh Sharma` |
 | `BOOTSTRAP_OWNER_TOKEN` | A private random token of at least 32 characters |
 
-The locally available Mailjet pair was rejected with HTTP 401 on 21 September 2026.
-A replacement must be verified before sending is enabled. Do not paste keys into Git,
-chat, public pages or build commands. Production refuses SQLite, incomplete CAPTCHA,
-known CAPTCHA test keys and preview email delivery.
+Working referral Mailjet credentials were verified on 22 September 2026 and configured
+only on the separate timesheet service. Mailjet accepted a fictional test claim with
+an Excel attachment for `devansh.sharma@geezabreak.org.uk`. Configure the general
+account-mail variables as well when enabling production invitations and recovery.
+Do not paste keys into Git, chat, public pages or build commands. Production refuses
+SQLite, incomplete CAPTCHA, known CAPTCHA test keys and preview email delivery.
 
 ## Cutover and verification
 
-1. Provision the approved separate database; use its internal connection URL. Restrict
-   external access to the required operators. Confirm paid backups/PITR are available.
+1. Connect a separate free PostgreSQL database and use its TLS connection URL. Keep
+   credentials private and use a region close to the Render service where available.
+   Arrange backups that fit the charity's budget; do not assume free hosting includes them.
 2. Configure the above secrets and verified sender; add only this app's hostname to its
    separate Turnstile widget. Verify Mailjet authentication and sender status.
 3. Prepare the owner's private link using the random token:
@@ -77,11 +89,10 @@ known CAPTCHA test keys and preview email delivery.
 7. Export and restore a database backup into an isolated test database and verify the
    restored records. Agree retention and payroll sign-off with finance before staff use.
 
-If initial activation expires, an authorised server operator can reissue a setup
-invitation with the existing `staff_portal.accounts.issue_link(owner, "setup")` function,
-using the profile with `roster_key="portal-owner"`. It sends to the registered address
-through the configured mail backend. Active accounts use password recovery. Do not
-reset a person's password by rerunning bootstrap.
+If initial activation expires, the owner can choose **Set up your staff account** on
+the sign-in page and enter the registered work email. CAPTCHA and request limits apply;
+only a registered, enabled, inactive account receives the one-use setup email. Active
+accounts use password recovery. Do not reset a person's password by rerunning bootstrap.
 
 ## Local personal account
 

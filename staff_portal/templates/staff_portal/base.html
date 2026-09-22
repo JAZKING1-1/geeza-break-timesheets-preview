@@ -2,19 +2,27 @@
 <!doctype html>
 <html lang="en-GB">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#00789a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Geeza Break">
   <title>{% block title %}Staff portal{% endblock %} · Geeza Break</title>
   <link rel="icon" href="{% static 'images/thumbnail_LOGO.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'staff_portal/app-icon-192.png' %}">
+  <link rel="manifest" href="{% url 'staff:manifest' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/portal.css' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/comfort.css' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/date-picker.css' %}">
+  <link rel="stylesheet" href="{% static 'staff_portal/mobile.css' %}">
   <script defer src="{% static 'staff_portal/portal.js' %}"></script>
+  <script defer src="{% static 'staff_portal/mobile.js' %}"></script>
   {% if captcha_action and not captcha_simulated and not portal_preview %}<script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>{% endif %}
 </head>
 <body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}{% if portal_preview or portal_local %} with-banner{% endif %}">
 <a class="skip" href="#main">Skip to content</a>
 {% if portal_preview %}<div class="local-banner preview-banner"><span class="local-dot"></span><strong>PRIVATE REVIEW</strong><span>Fictional data only · {% if notification_preview %}Emails are previews{% else %}Claim emails enabled{% endif %} · Demo may reset</span></div>{% elif portal_local %}<div class="local-banner"><span class="local-dot"></span><strong>LOCAL DEVELOPMENT</strong><span>Stored on this computer · {% if notification_preview %}Email delivery is off{% else %}Submission email enabled{% endif %}</span></div>{% endif %}
 {% if portal_staff %}
+<header class="mobile-header no-print"><a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="44" height="44"><span>Staff space<small>Timesheets made simple</small></span></a><span class="mobile-avatar" aria-label="Signed in as {{ portal_staff.name }}">{{ portal_staff.name|slice:':1' }}</span></header>
 <aside class="sidebar">
   <a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="72" height="72"><span>Staff space<small>A little time, well spent.</small></span></a>
   <div class="nav-label">YOUR WORKSPACE</div>
@@ -34,12 +42,27 @@
 <header class="auth-header"><a class="brand" href="{% url 'staff:dashboard' %}"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="68" height="68"><span>Staff space</span></a><a href="{% url 'staff:dashboard' %}">{% if portal_preview %}Timesheet preview{% else %}Staff sign in{% endif %} <span aria-hidden="true">↗</span></a></header>
 {% endif %}
 <main id="main" class="{% if portal_staff %}workspace{% else %}auth-main{% endif %}" tabindex="-1">
+  <div id="connection-notice" class="notice warning" role="alert" hidden>You are offline. Keep this page open. Your new entries cannot be saved or emailed until you reconnect.</div>
   {% if messages %}<div class="messages" aria-live="polite">{% for message in messages %}<div class="notice {{ message.tags }}" role="status" tabindex="-1">{% if message.tags == 'success' %}<span class="notice-symbol" aria-hidden="true">✓</span>{% endif %}{{ message }}</div>{% endfor %}</div>{% endif %}
   {% if portal_staff %}<div id="session-warning" class="notice warning" hidden>Your session will expire soon. Save your changes, or <button id="keep-session" class="text-button" type="button">keep working</button>.</div>{% endif %}
   {% if portal_preview and portal_staff %}<section class="preview-switch no-print" aria-label="Explore demo roles"><div><strong>Explore the workflow</strong><small>Switch between fictional accounts</small></div><form method="post" action="{% url 'staff:switch_role' %}">{% csrf_token %}<label class="sr-only" for="preview-role">Preview role</label><select id="preview-role" name="role"><option value="employee" {% if portal_staff.role == 'employee' %}selected{% endif %}>Employee</option><option value="finance" {% if portal_staff.role == 'finance' %}selected{% endif %}>Finance</option><option value="administrator" {% if portal_staff.role == 'administrator' %}selected{% endif %}>Administrator</option></select><button class="button secondary">Switch view</button></form></section>{% endif %}
   {% block content %}{% endblock %}
   <footer class="page-footer"><span>Geeza Break · Supporting families, together.</span><span>Staff portal{% if portal_preview %} · Review demo{% elif portal_local %} · Local development{% endif %}</span></footer>
 </main>
+{% if portal_staff %}
+<nav class="mobile-nav no-print" aria-label="Mobile navigation">
+  <a href="{% url 'staff:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or own %}aria-current="page"{% endif %}><span aria-hidden="true">◷</span><span>My hours</span></a>
+  <a href="{% url 'staff:dashboard' %}#work-date-heading"><span aria-hidden="true">＋</span><span>Add work</span></a>
+  {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span><span>Review</span></a>{% endif %}
+  <details class="mobile-menu"><summary><span aria-hidden="true">☰</span><span>More</span></summary><div class="mobile-menu-panel"><strong>{{ portal_staff.name }}</strong><small>{{ portal_staff.get_role_display }}</small>
+    {% if portal_staff.is_administrator %}<a href="{% url 'staff:staff_list' %}">Manage staff access</a>{% endif %}
+    {% if not portal_preview %}<a href="{% url 'staff:security' %}">Account security</a>{% endif %}
+    <button type="button" class="text-button" id="install-app" hidden>Add app to home screen</button>
+    <details class="install-help"><summary>Add to home screen</summary><p>On iPhone, use Safari’s Share menu, then Add to Home Screen. On Android, use your browser menu and choose Install app or Add to Home screen.</p></details>
+    <form method="post" action="{% url 'staff:logout' %}">{% csrf_token %}<button class="text-button">Sign out</button></form>
+  </div></details>
+</nav>
+{% endif %}
 <div id="action-feedback" class="action-feedback" role="status" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>

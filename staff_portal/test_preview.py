@@ -109,6 +109,8 @@ class PrivatePreviewTests(TestCase):
     def test_preview_ignores_any_inherited_live_mailjet_configuration(self):
         env = {**os.environ, "APP_ENV": "preview", "DJANGO_SECRET_KEY": "x" * 64,
                "PREVIEW_ACCESS_CODE": CODE, "RENDER_EXTERNAL_HOSTNAME": "preview.example.test",
+               # Keep this fixture independent of a developer's explicit claim-mail opt-in.
+               "TIMESHEET_EMAIL_DELIVERY": "preview",
                "MAILJET_API_KEY": "must-not-be-used", "MAILJET_API_SECRET": "must-not-be-used"}
         code = ("from config import settings as s; "
                 "assert s.MAILJET_API_KEY == s.MAILJET_API_SECRET == ''; "

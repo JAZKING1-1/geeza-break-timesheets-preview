@@ -12,9 +12,9 @@ no copied Git history, no real staff roster, no payroll database and no Mailjet 
 3. Use **Date worked → Choose date** to pick a day, month and year in the calendar
    popup, then choose **Open timesheet**. The matching month opens with the selected
    date in a new row. Each row also has a date picker. Enter each shift in a horizontal
-   row with date, service / work type,
-   start/finish, break and purpose. On a phone, swipe across the grid; the date stays
-   visible. The saved total and save/submit controls stay below the grid.
+   row with date, service / work type, start/finish, break and purpose. On a phone,
+   the same entries become labelled shift cards with large controls. Tablets can
+   scroll the horizontal grid. The saved total and save/submit controls follow the entries.
 4. Save a draft or submit the complete timesheet in one action.
 5. An authorised finance reviewer can review, return or approve another employee's sheet.
 6. Export a summary or detailed CSV, or print/save a PDF.
@@ -34,6 +34,22 @@ required private configuration, dedicated database, costs and cutover checks.
 `APP_ENV=production` requires persistent PostgreSQL, real CAPTCHA and email delivery.
 The one-use setup link lets the owner choose their own password. Startup never resets
 that password. Sample accounts and role switching are unavailable outside review mode.
+The sign-in page's **Set up your staff account** link sends a fresh activation email
+only to an enabled, registered staff address that still needs activation. It does not
+allow public self-registration or reveal whether an address belongs to the organisation.
+
+## Phone and app navigation
+
+On phones, the bottom navigation provides **My hours**, **Add work**, **Review** for
+reviewers, and **More** for account and staff settings. The layout accounts for phone
+safe areas, uses labelled controls and keeps keyboard focus and action feedback visible.
+The same pages retain a desktop sidebar and horizontal entry rows on larger screens.
+
+Use **More → Add to home screen** for device-specific instructions. Compatible browsers
+can install the web app directly; iPhone users can add it through Safari's Share menu.
+An internet connection is required. The service worker never caches staff pages or
+queues submissions. An offline notice prevents a form being presented as saved when
+there is no connection; a successful server response remains the confirmation of saving.
 
 ## Run the review locally
 
@@ -121,11 +137,12 @@ On this separate Render service, set the following **private environment variabl
 - `TIMESHEET_FROM_EMAIL`: an active, verified Mailjet sender address.
 - `TIMESHEET_NOTIFICATION_EMAIL`: the complete, confirmed reviewer email address.
 
-The existing referral Mailjet account can be reused: copy its working private
-`MAILJET_API_KEY` and `MAILJET_API_SECRET` values into this service's two
-`TIMESHEET_MAILJET_*` variables. Leave the original service unchanged. Do not paste
-the values into source files or chat. The local referral source only reads these
-values from its environment; it does not contain the live hosting secrets.
+The existing referral Mailjet account is reused through this service's private
+`TIMESHEET_MAILJET_*` variables. On 22 September 2026, Mailjet authentication and the
+sender were verified, and a clearly labelled fictional claim with an Excel attachment
+was accepted for delivery to Devansh's work email. This verifies provider acceptance,
+not inbox arrival. The original website and its environment were not changed. Never
+put credentials into source files or chat.
 
 Keep delivery set to `preview` until the credentials and addresses have been verified.
 The application refuses incomplete email configuration when Mailjet delivery is selected.
