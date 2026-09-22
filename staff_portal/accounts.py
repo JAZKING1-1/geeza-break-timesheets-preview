@@ -47,9 +47,11 @@ def issue_link(profile, purpose, actor=None):
 
 @transaction.atomic
 def consume_link(link_id, digest, password):
+    # A password needs an attached user. Requiring one also makes the join
+    # non-nullable, so PostgreSQL can lock it with FOR UPDATE.
     link = PasswordLink.objects.select_for_update().select_related("staff__user").filter(
         pk=link_id, token_hash=digest, used_at__isnull=True, expires_at__gt=timezone.now(),
-        staff__enabled=True).first()
+        staff__enabled=True, staff__user__isnull=False).first()
     if not link:
         raise ValidationError("This link has expired or has already been used. Request a new one.")
     if PasswordLink.objects.filter(pk=link.pk, used_at__isnull=True).update(used_at=timezone.now()) != 1:

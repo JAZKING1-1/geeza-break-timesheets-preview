@@ -9,6 +9,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
@@ -57,6 +58,21 @@ class PersonalOwnerTests(TestCase):
         self.assertEqual(owner.user.password, password_hash)
         self.assertEqual(PasswordLink.objects.count(), 1)
         self.assertEqual(self.client.get(reverse("staff:password_link", args=[token])).status_code, 400)
+
+    def test_setup_without_an_attached_user_is_rejected_without_consuming_link(self):
+        self.bootstrap()
+        owner = StaffProfile.objects.get()
+        original_user = owner.user
+        owner.user = None
+        owner.save(update_fields=["user"])
+        link = PasswordLink.objects.get()
+        with self.assertRaisesMessage(ValidationError, "expired or has already been used"):
+            consume_link(link.pk, link.token_hash, "A personal staff password with 2026 length")
+        link.refresh_from_db()
+        original_user.refresh_from_db()
+        self.assertIsNone(link.used_at)
+        self.assertFalse(original_user.is_active)
+        self.assertFalse(original_user.has_usable_password())
 
     def test_cannot_reassign_an_existing_owner_or_bootstrap_over_demo_data(self):
         self.bootstrap()
