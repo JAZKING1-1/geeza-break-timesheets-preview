@@ -21,7 +21,7 @@ class PortalPasswordForm(SetPasswordForm):
             field.max_length = 256
             field.validators.append(MaxLengthValidator(256))
             field.widget.attrs["maxlength"] = 256
-        self.fields["new_password1"].help_text = "Use a unique passphrase of at least 15 characters. Spaces are welcome."
+        self.fields["new_password1"].help_text = "Use a unique password of at least 8 characters. Longer passwords and spaces are welcome."
 
 
 class MonthForm(forms.Form):

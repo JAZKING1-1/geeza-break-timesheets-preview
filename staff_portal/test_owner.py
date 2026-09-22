@@ -14,6 +14,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from .accounts import consume_link
+from .forms import PortalPasswordForm
 from .models import PasswordLink, StaffProfile, Timesheet
 from .security import token_digest
 
@@ -66,6 +67,29 @@ class PersonalOwnerTests(TestCase):
         StaffProfile.objects.create(name="Old demo", job_title="Demo", is_demo=True)
         with self.assertRaises(CommandError):
             self.bootstrap()
+
+    @patch.dict(os.environ, {"BOOTSTRAP_OWNER_TOKEN": "password-length-test-token-over-32-characters"})
+    def test_setup_accepts_eight_characters_and_rejects_seven(self):
+        self.bootstrap()
+        token = os.environ["BOOTSTRAP_OWNER_TOKEN"]
+        self.client.get(reverse("staff:password_link", args=[token]))
+        response = self.client.post(reverse("staff:set_password"), {
+            "new_password1": "K7!mQ2z", "new_password2": "K7!mQ2z"})
+        self.assertContains(response, "at least 8 characters")
+        self.assertIsNone(PasswordLink.objects.get().used_at)
+        response = self.client.post(reverse("staff:set_password"), {
+            "new_password1": "K7!mQ2zR", "new_password2": "K7!mQ2zR"})
+        self.assertRedirects(response, reverse("staff:login"))
+        user = StaffProfile.objects.get().user
+        self.assertTrue(user.is_active)
+        self.assertTrue(user.check_password("K7!mQ2zR"))
+
+    def test_longer_passwords_remain_valid_and_common_passwords_are_rejected(self):
+        user = get_user_model()(username="length-test", email="owner@example.org")
+        for password, valid in [("Several uncommon words plus 9!", True), ("password", False), ("12345678", False)]:
+            with self.subTest(password_type="long" if valid else "weak"):
+                form = PortalPasswordForm(user, data={"new_password1": password, "new_password2": password})
+                self.assertEqual(form.is_valid(), valid)
 
     def test_preview_and_unconfigured_remote_bootstrap_are_rejected(self):
         with override_settings(PORTAL_PREVIEW=True), self.assertRaises(CommandError):
