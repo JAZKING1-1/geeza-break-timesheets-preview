@@ -1,0 +1,14 @@
+{% extends 'staff_portal/base.html' %}
+{% block title %}Add new timesheet{% endblock %}
+{% block content %}
+<div class="topline"><a href="{% url 'staff:dashboard' %}">← My timesheets</a></div>
+<header class="page-heading"><div><span class="eyebrow">LET’S ADD YOUR WORK</span><h1>Add new timesheet</h1><p>Choose the date of your first shift. Then add your services and hours.</p></div></header>
+<section class="panel form-panel">
+  <form method="post" action="{% url 'staff:new_sheet' %}">{% csrf_token %}
+    {% include 'staff_portal/fields.html' %}
+    {% if existing_sheet %}<p><a href="{% url 'staff:sheet' existing_sheet.pk %}">View your {{ existing_sheet.month|date:'F Y' }} timesheet</a></p>{% endif %}
+    <p class="help">Shifts are grouped into one timesheet per month. An existing draft will open so you can continue it.</p>
+    <div class="form-footer"><a href="{% url 'staff:dashboard' %}">Cancel</a><button class="button primary" data-pending-label="Opening entries…">Continue to shifts <span aria-hidden="true">→</span></button></div>
+  </form>
+</section>
+{% endblock %}

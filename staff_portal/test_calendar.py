@@ -34,6 +34,23 @@ class WorkDatePickerTests(TestCase):
         self.assertContains(response, 'data-calendar-for="id_work_date"')
         self.assertContains(response, 'name="work_date"')
 
+    def test_start_page_does_not_create_records_and_invalid_date_stays_on_form(self):
+        url = reverse("staff:new_sheet")
+        self.assertContains(self.client.get(url), "Continue to shifts")
+        self.assertFalse(Timesheet.objects.exists())
+        response = self.client.post(url, {"work_date": "2028-02-30"})
+        self.assertContains(response, "Enter a valid date", status_code=400)
+        self.assertFalse(Timesheet.objects.exists())
+
+    def test_submitted_month_is_explained_without_reopening_or_duplicating_it(self):
+        sheet = Timesheet.objects.create(staff=self.staff, month=dt.date(2028, 2, 1), status="submitted")
+        response = self.client.post(reverse("staff:new_sheet"), {"work_date": "2028-02-29"})
+        self.assertContains(response, "has already been submitted", status_code=409)
+        self.assertContains(response, reverse("staff:sheet", args=[sheet.pk]), status_code=409)
+        self.assertEqual(Timesheet.objects.count(), 1)
+        sheet.refresh_from_db()
+        self.assertEqual(sheet.status, "submitted")
+
     def test_dates_in_all_months_and_years_reuse_existing_timesheets(self):
         for month in range(1, 13):
             value = f"2028-{month:02}-15"

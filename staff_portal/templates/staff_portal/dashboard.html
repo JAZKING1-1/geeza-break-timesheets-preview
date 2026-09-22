@@ -11,8 +11,8 @@
 <div class="hours-display"><strong>{% if current %}{{ current.total_display }}{% else %}0h 00m{% endif %}</strong><span>HOURS RECORDED</span><small>{% if current and current.status == 'approved' %}Reviewed and approved{% else %}Your saved time so far{% endif %}</small></div>
 </section>
 <div class="new-timesheet-action" id="add-timesheet" tabindex="-1">
-  <form method="post" action="{% url 'staff:new_sheet' %}">{% csrf_token %}<input type="hidden" name="month" value="{{ month|date:'Y-m' }}"><button class="button primary" data-pending-label="Opening timesheet…">Add new timesheet <span aria-hidden="true">＋</span></button></form>
-  <p>Enter your dates, services and hours on the next page. You can choose another month there.</p>
+  <a class="button primary" href="{% url 'staff:new_sheet' %}">Add new timesheet <span aria-hidden="true">＋</span></a>
+  <p>Choose when you worked, add your shifts, then save or submit.</p>
 </div>
 <section class="panel">
 <div class="section-heading"><div><h2>My saved timesheets</h2><p>All your months and years, with hours and approval status.</p></div></div>

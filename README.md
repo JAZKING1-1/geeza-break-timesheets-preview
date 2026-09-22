@@ -9,8 +9,9 @@ no copied Git history, no real staff roster, no payroll database and no Mailjet 
 1. Open the staff portal on a phone, tablet or computer.
 2. In personal-account mode, sign in with your work email and password.
    The hosted review remains separate until the production prerequisites are configured.
-3. Choose **Add new timesheet** to go straight to this month's entries. If that month
-   already exists, it opens the saved sheet. Use the date picker inside each shift.
+3. Choose **Add new timesheet**, select the first date you worked, then choose
+   **Continue to shifts**. An existing draft opens so you can continue it; an already
+   submitted month shows a clear explanation and a link to the claim. Use the date picker inside each shift.
    For another month or year, expand **Different month or year?**, choose a date and
    select **Open timesheet**. The matching sheet opens with that date in a new row.
    Enter each shift in a horizontal

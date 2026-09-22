@@ -14,7 +14,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from .accounts import issue_link
 from .bulk import MAX_ROWS, RowErrors, monthly_formset, save_month
@@ -55,20 +55,31 @@ def dashboard(request):
         "pending_count": Timesheet.objects.filter(status="submitted").exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 
-@require_POST
+@require_http_methods(["GET", "POST"])
 @portal_required()
 def new_sheet(request):
+    if request.method == "GET":
+        return render(request, "staff_portal/new_sheet.html", {
+            "form": WorkDateForm(initial={"work_date": timezone.localdate()})})
     choosing_date = "work_date" in request.POST
     form = WorkDateForm(request.POST) if choosing_date else MonthForm(request.POST)
     if form.is_valid():
         day = form.cleaned_data["work_date"] if choosing_date else form.cleaned_data["month"]
         month = day.replace(day=1)
         sheet, created = Timesheet.objects.get_or_create(staff=request.staff, month=month)
+        if not sheet.editable:
+            date_form = WorkDateForm({"work_date": day.isoformat()})
+            date_form.add_error(None, f"Your {month:%B %Y} timesheet has already been submitted. Choose another month, or ask your reviewer to return it if you need to add missing work.")
+            return render(request, "staff_portal/new_sheet.html", {"form": date_form, "existing_sheet": sheet}, status=409)
         if created:
             audit(request.user, "Timesheet created", request.staff, sheet)
+        else:
+            messages.info(request, f"Opened your saved {month:%B %Y} draft. Add your remaining shifts below.")
         url = reverse("staff:sheet", args=[sheet.pk])
         return redirect(f"{url}?date={day.isoformat()}#entry-grid" if choosing_date else url)
-    messages.error(request, "Choose a valid date, including the day, month and year." if choosing_date else "Choose a valid calendar month.")
+    if choosing_date:
+        return render(request, "staff_portal/new_sheet.html", {"form": form}, status=400)
+    messages.error(request, "Choose a valid calendar month.")
     return redirect("staff:dashboard")
 
 
