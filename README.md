@@ -4,11 +4,15 @@ A separate Django project for recording worked hours, submitting monthly claims 
 contains only the portal and its public logo. It has no dependency on the main website,
 no copied Git history, no real staff roster, no payroll database and no Mailjet credentials.
 
+The [hosted staff portal](https://geeza-break-timesheets-preview.onrender.com/) now
+runs in production mode with Neon PostgreSQL, Cloudflare Turnstile and Mailjet.
+Its existing URL still contains `preview`; the live application has personal accounts
+and no demo login. Credentials and records are stored outside this repository.
+
 ## Record and review hours
 
 1. Open the staff portal on a phone, tablet or computer.
-2. In personal-account mode, sign in with your work email and password.
-   The hosted review remains separate until the production prerequisites are configured.
+2. Sign in with your registered work email and personal password.
 3. Choose **Add new timesheet**, select the first date you worked, then choose
    **Continue to shifts**. An existing draft opens so you can continue it; an already
    submitted month shows a clear explanation and a link to the claim. Use the date picker inside each shift.
@@ -31,8 +35,8 @@ Share it privately with reviewers; it is separate from the website link.
 
 ## Personal accounts and production
 
-See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the prepared owner-account flow,
-required private configuration, dedicated database, costs and cutover checks.
+See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the live configuration,
+owner-account flow, dedicated database, costs and cutover checks.
 `APP_ENV=development` uses personal accounts in a separate local database.
 `APP_ENV=production` requires persistent PostgreSQL, real CAPTCHA and email delivery.
 The one-use setup link lets the owner choose their own password. Startup never resets
@@ -71,7 +75,9 @@ Open http://127.0.0.1:8010. Read the locally generated code from
 
 ## Render review deployment
 
-Deploy this repository as a Python web service with:
+The following is for creating an additional disposable review environment. Do not
+apply these preview settings to the live staff service described above.
+Deploy a separate copy as a Python web service with:
 
 - Region: Frankfurt; plan: Free.
 - Build command: `bash build.sh`.

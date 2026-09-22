@@ -22,14 +22,20 @@ Do not edit the original Geezabreak website, its database, service or `.org.uk` 
 This records hours and approvals for finance to process. It does not calculate wages
 or send payroll payments. Finance should validate the exported hours before payroll.
 
-## Free hosting setup still required
+## Live hosting configuration — 22 September 2026
 
-The charity's target is no recurring hosting charge. No paid database or service has
-been purchased. Keep the separate Render web service on its Free plan. A dedicated
-Neon Free PostgreSQL database is compatible with the existing Django application and
-is proposed for persistent records; the owner still needs to connect an account.
-Neon's free quota currently includes 0.5 GB storage and 100 CU-hours per project per
-month. Monitor the allowance and arrange private backups before collecting real claims.
+- The separate Render service now runs with `APP_ENV=production` on its Free plan.
+- Persistent records use the `geezabreak_timesheets` database in the owner's Neon
+  Free project. Connections require TLS. No local or hosted demo records were imported.
+- The dedicated **Geeza Break Staff Timesheets** Turnstile widget uses Managed mode
+  and allows only `geeza-break-timesheets-preview.onrender.com`. Pre-clearance is off.
+- General account email and Excel claim notifications use the existing verified
+  Mailjet account. Notifications go to `devansh.sharma@geezabreak.org.uk`.
+- Startup created Devansh Sharma's personal administrator account. The owner must
+  choose their own password through the private, one-use setup page.
+
+No paid database or service has been purchased. Keep both hosting plans free, monitor
+their allowances, and arrange private backups before collecting real claims.
 Free hosting can sleep, so the first page load may take longer after inactivity.
 
 Sources: [Neon plans](https://neon.com/docs/introduction/plans),
@@ -39,14 +45,16 @@ disposable; neither is the intended permanent store for payroll records. Do not 
 fictional sample data into the new database. Firebase would require a separate backend
 migration; it is not connected by this implementation.
 
-The hosted service remains in review mode until persistent storage and a real
-Cloudflare Turnstile widget are configured. Submission email with Excel is already
-enabled and has been verified. Personal account activation is implemented but is
-intentionally unavailable in the disposable hosted review database.
+The live site is https://geeza-break-timesheets-preview.onrender.com/.
+The existing hostname retains the word `preview`, but the application now uses real
+accounts and persistent storage. Shared demo login and role switching are disabled.
+Backup restoration and a complete staff/finance approval exercise remain operational
+checks; this configuration change does not claim those have been completed.
 
 ## Required private configuration
 
-Configure these on the separate service before switching `APP_ENV` to `production`:
+These are configured privately on the separate service. Use this table when restoring
+or recreating that deployment; never replace its database with the disposable review one:
 
 | Setting | Value or source |
 | --- | --- |
@@ -66,8 +74,8 @@ Configure these on the separate service before switching `APP_ENV` to `productio
 
 Working referral Mailjet credentials were verified on 22 September 2026 and configured
 only on the separate timesheet service. Mailjet accepted a fictional test claim with
-an Excel attachment for `devansh.sharma@geezabreak.org.uk`. Configure the general
-account-mail variables as well when enabling production invitations and recovery.
+an Excel attachment for `devansh.sharma@geezabreak.org.uk`. General account-mail
+variables are now configured for production invitations and recovery as well.
 Do not paste keys into Git, chat, public pages or build commands. Production refuses
 SQLite, incomplete CAPTCHA, known CAPTCHA test keys and preview email delivery.
 
