@@ -131,9 +131,11 @@ ul { padding-left: 1.35rem; }
 .testimonial:nth-child(3n) { background: #f8faed; }
 .quote-mark { display: block; font: 80px/.85 Georgia, serif; color: var(--teal); height: 55px; }
 .testimonial blockquote { font-size: 1rem; line-height: 1.8; }
-.testimonial figcaption { display: flex; align-items: center; gap: 12px; padding-top: 24px; margin-top: 26px; border-top: 1px solid var(--line); font-size: 1rem; }
-.testimonial figcaption small { display: block; font-size: .77rem; color: var(--muted); }
-.quote-avatar { display: grid; place-items: center; border-radius: 50%; width: 42px; height: 42px; background: var(--yellow); font-weight: 750; }
+.testimonial figcaption, .group-message figcaption { display: flex; align-items: center; gap: 16px; padding-top: 24px; margin-top: 26px; border-top: 1px solid var(--line); font-size: 1rem; text-align: left; }
+.testimonial figcaption small, .group-message figcaption small { display: block; font-size: .77rem; color: var(--muted); }
+.quote-avatar { flex: 0 0 88px; width: 88px; height: 88px; object-fit: contain; border-radius: 24px; border: 2px solid white; background: var(--pale); }
+.avatar-credit { margin-top: 20px; font-size: .78rem; color: var(--muted); }
+.avatar-credit a { display: inline-block; padding-block: 10px; }
 .related-link { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--line); padding-block: 24px; font-size: .94rem; }
 .related-link > span { color: var(--muted); }
 .adrs-hero { background: var(--pale); grid-template-columns: 1.4fr .8fr; align-items: center; }
@@ -154,10 +156,10 @@ ul { padding-left: 1.35rem; }
 .group-feature h3 { font-size: 2rem; margin-block: 20px 12px; }
 .group-feature .lead { color: var(--ink); }
 .group-feature .button { margin-top: 24px; }
-.group-message { padding: 30px; background: var(--yellow); border-radius: 100px 100px 16px 16px; align-self: center; text-align: center; }
-.group-message > span { font: 120px/.8 Georgia, serif; color: var(--deep); display: block; margin-top: 30px; height: 72px; }
-.group-message p { font-size: 1.75rem; font-weight: 650; line-height: 1.35; letter-spacing: -.04em; }
-.group-message i { font-size: .8rem; font-style: normal; display: block; margin-top: 20px; }
+.group-message { min-width: 0; padding: 28px; background: #fff5ca; border: 1px solid #e5d99e; border-radius: 24px; align-self: center; }
+.group-message blockquote p { font-size: 1.08rem; line-height: 1.7; }
+.group-message figcaption { border-top-color: #e5d99e; }
+.group-message .text-link { margin-top: 10px; font-size: .88rem; }
 .seasonal-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; }
 .seasonal-layout .lead { margin-top: 20px; }
 .seasonal-list { list-style: none; padding: 0; margin: 0; }
@@ -238,12 +240,15 @@ ul { padding-left: 1.35rem; }
   .story-layout { gap: 25px; }
   .testimonial { padding: 27px 25px; }
   .testimonial blockquote { font-size: 1rem; }
+  .quote-avatar { flex-basis: 72px; width: 72px; height: 72px; border-radius: 20px; }
+  .testimonial figcaption, .group-message figcaption { gap: 12px; }
   .related-link { align-items: start; flex-direction: column; gap: 5px; }
   .partnership-card { margin: 0 25px 25px; border-radius: 90px 90px 16px 16px; }
   .referral-panel { padding: 26px; gap: 25px; }
   .groups-hero { padding: 30px 25px; }
   .group-feature { padding: 25px; gap: 30px; }
-  .group-message { max-width: 350px; width: 100%; justify-self: center; }
+  .group-message { max-width: 350px; width: 100%; justify-self: center; padding: 18px; }
+  .group-message blockquote p { font-size: 1rem; }
   .contact-section { flex-direction: column; padding-block: 35px; margin-block: 20px; gap: 22px; }
   .contact-section h2 { font-size: 1.8rem; }
   .contact-actions { flex-shrink: 1; max-width: 100%; }

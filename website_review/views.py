@@ -39,4 +39,5 @@ def adrs(request):
 
 @require_safe
 def groups(request):
-    return review_page(request, "groups", "Family Support Group Work")
+    robyn = next(quote for quote in TESTIMONIALS if quote["name"] == "Robyn")
+    return review_page(request, "groups", "Family Support Group Work", featured_parent=robyn)
