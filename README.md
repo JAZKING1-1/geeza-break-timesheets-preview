@@ -168,10 +168,27 @@ Old queued notices without an Excel snapshot fail safely instead of attaching a
 potentially different current timesheet. Previously sent notices are not re-sent.
 Local previews include the same MIME attachment, but never send email.
 
+## Website content review
+
+The separate timesheet service also hosts public, read-only pages for Gillian to
+review proposed website updates at `/website-review/`:
+
+- `brighter-beginnings/`: the supplied flyer, service bio and six full testimonials.
+- `adrs-respite-sitting/`: the ADRS/FASS service replacing Respite Care in this review.
+- `family-support-group-work/`: regular groups and workshops, including Brighter Beginnings.
+
+The `website_review` app has no models, forms or database queries. These pages do
+not grant staff access or alter timesheet/email workflows. They are labelled as
+website previews and send noindex headers; they are shareable without a login.
+Only the supplied public-facing flyer is included, not email screenshots.
+Deploy these changes only to `geeza-break-timesheets-preview`; the original
+`www.geezabreak.org.uk` website and its repository are outside this change.
+
 ## Checks
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py test staff_portal
+.\.venv\Scripts\python.exe manage.py test website_review
 .\.venv\Scripts\python.exe manage.py check
 .\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
 ```

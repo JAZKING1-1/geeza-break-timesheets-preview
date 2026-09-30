@@ -64,7 +64,7 @@ X_FRAME_OPTIONS = "DENY"
 
 INSTALLED_APPS = [
     "django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions",
-    "django.contrib.messages", "django.contrib.staticfiles", "staff_portal",
+    "django.contrib.messages", "django.contrib.staticfiles", "staff_portal", "website_review",
     "django_otp", "django_otp.plugins.otp_totp",
 ]
 MIDDLEWARE = [
