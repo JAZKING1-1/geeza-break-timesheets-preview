@@ -1,7 +1,8 @@
 from unittest.mock import Mock, patch
 
 import requests
-from django.test import RequestFactory, SimpleTestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
+from django.urls import reverse
 
 from .security import verify_captcha
 
@@ -53,3 +54,22 @@ class CaptchaVerificationTests(SimpleTestCase):
                 self.assertFalse(verify_captcha(self.request, "login"))
         self.assertIn("verification_service_unavailable", logs.output[0])
         self.assertNotIn("private-test-key", logs.output[0])
+
+
+@override_settings(PORTAL_PREVIEW=False, PORTAL_CAPTCHA_MODE="turnstile", TURNSTILE_SITE_KEY="public-test-key")
+class CaptchaFormTests(TestCase):
+    def test_auth_forms_wait_for_verification_and_use_correct_action(self):
+        for route, action in [("login", "login"), ("activate_account", "activate"), ("reset_password", "reset")]:
+            with self.subTest(route=route):
+                response = self.client.get(reverse("staff:"+route))
+                self.assertContains(response, 'disabled data-captcha-submit')
+                self.assertContains(response, 'data-action="'+action+'"')
+                self.assertContains(response, 'captcha-status')
+                self.assertContains(response, 'captcha.js')
+                self.assertContains(response, 'render=explicit')
+
+    @override_settings(PORTAL_CAPTCHA_MODE="simulate")
+    def test_local_simulator_remains_independent_of_cloudflare(self):
+        response = self.client.get(reverse("staff:login"))
+        self.assertNotContains(response, 'disabled data-captcha-submit')
+        self.assertNotContains(response, 'turnstile/v0/api.js')

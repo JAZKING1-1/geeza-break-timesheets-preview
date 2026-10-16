@@ -1,5 +1,5 @@
 {% extends "staff_portal/base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}<section class="auth-card"><span class="eyebrow">YOUR STAFF ACCOUNT</span><h1>{{ title }}</h1><p class="muted">{{ intro }}</p>
-<form method="post" class="stack-form">{% csrf_token %}{% include "staff_portal/fields.html" %}{% if captcha_action %}{% include "staff_portal/captcha.html" %}{% endif %}<button class="button primary full">{{ button }} <span aria-hidden="true">→</span></button></form>
+<form method="post" class="stack-form">{% csrf_token %}{% include "staff_portal/fields.html" %}{% if captcha_action %}{% include "staff_portal/captcha.html" %}{% endif %}<button class="button primary full" {% if captcha_action and not captcha_simulated %}disabled data-captcha-submit aria-describedby="captcha-status"{% endif %}>{{ button }} <span aria-hidden="true">→</span></button></form>
 <a class="back-link" href="{% url 'staff:login' %}">← Back to sign in</a></section>{% endblock %}

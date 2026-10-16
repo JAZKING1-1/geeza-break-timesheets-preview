@@ -17,7 +17,10 @@
   <link rel="stylesheet" href="{% static 'staff_portal/workspace.css' %}">
   <script defer src="{% static 'staff_portal/portal.js' %}"></script>
   <script defer src="{% static 'staff_portal/mobile.js' %}"></script>
-  {% if captcha_action and not captcha_simulated and not portal_preview %}<script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>{% endif %}
+  {% if captcha_action and not captcha_simulated and not portal_preview %}
+  <script defer src="{% static 'staff_portal/captcha.js' %}"></script>
+  <script id="turnstile-api" defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=portalTurnstileReady&amp;render=explicit"></script>
+  {% endif %}
 </head>
 <body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}{% if portal_preview or portal_local %} with-banner{% endif %}">
 <a class="skip" href="#main">Skip to content</a>

@@ -47,7 +47,7 @@ def login(request):
         if request_limited(request, "login", email):
             form.add_error(None, "Too many attempts. Please wait 15 minutes and try again.")
         elif not verify_captcha(request, "login"):
-            form.add_error(None, "Verification was unsuccessful. Try the verification again.")
+            form.add_error(None, "Verification was unsuccessful on the previous attempt. Complete the new security check below, re-enter your password and try again.")
         else:
             profile = StaffProfile.objects.select_related("user").filter(email__iexact=email, enabled=True, is_demo=False).first()
             user = None
