@@ -3,6 +3,7 @@
   if (!container) return;
   const form = container.closest('form');
   const submit = form.querySelector('[data-captcha-submit]');
+  const readyLabel = submit.textContent;
   const status = form.querySelector('#captcha-status');
   const retry = form.querySelector('[data-captcha-retry]');
   const reload = form.querySelector('[data-captcha-reload]');
@@ -12,10 +13,13 @@
   function update(ready, message, recover = false) {
     verified = ready;
     submit.disabled = !ready;
+    submit.textContent = ready ? readyLabel : 'Waiting for verification…';
     status.textContent = message;
     retry.hidden = !recover || widgetId === undefined;
     reload.hidden = !recover;
   }
+
+  update(false, 'Please wait for the security check before continuing.');
 
   const slowTimer = setTimeout(() => {
     if (!verified) update(false, 'The security check is taking longer than expected. Try again or reload this page.', true);
@@ -31,6 +35,10 @@
         size: container.clientWidth < 300 ? 'compact' : 'flexible',
         'refresh-expired': 'auto',
         'refresh-timeout': 'auto',
+        'before-interactive-callback': () => {
+          clearTimeout(slowTimer);
+          update(false, 'Please complete the security check above to continue.');
+        },
         callback: () => {
           clearTimeout(slowTimer);
           update(true, 'Verification complete. You can continue.');

@@ -7,7 +7,7 @@ const source = fs.readFileSync(path.join(__dirname, '../static/staff_portal/capt
 
 function harness(width = 320) {
   const events = {};
-  const submit = { disabled: true };
+  const submit = { disabled: true, textContent: 'Sign in' };
   const status = { textContent: '', focus() { this.focused = true; } };
   const retry = { hidden: true, addEventListener(name, callback) { events.retry = callback; } };
   const reload = { hidden: true };
@@ -41,10 +41,12 @@ test('early button or Enter submission is blocked until a token is ready', () =>
   const h = harness();
   assert.equal(h.send(), true);
   assert.equal(h.submit.disabled, true);
+  assert.equal(h.submit.textContent, 'Waiting for verification…');
   h.window.portalTurnstileReady();
   assert.equal(h.send(), true);
   h.success();
   assert.equal(h.submit.disabled, false);
+  assert.equal(h.submit.textContent, 'Sign in');
   assert.equal(h.send(), false);
 });
 
@@ -88,4 +90,14 @@ test('browser back restores require a new token; narrow screens use compact widg
   assert.equal(h.state.resets, 1);
   assert.equal(h.submit.disabled, true);
   assert.equal(h.send(), true);
+});
+
+test('interactive challenge tells the user what to do instead of reporting a failure', () => {
+  const h = harness(); h.window.portalTurnstileReady();
+  h.events.slow();
+  h.state.options['before-interactive-callback']();
+  assert.equal(h.status.textContent, 'Please complete the security check above to continue.');
+  assert.equal(h.submit.disabled, true);
+  h.success();
+  assert.equal(h.send(), false);
 });
