@@ -4,20 +4,20 @@
 <div class="login-layout">
   <section class="welcome-panel" aria-labelledby="welcome-heading">
     <span class="eyebrow">A SPACE FOR OUR TEAM</span>
-    <h1 id="welcome-heading">Your time.<br>Our families.<br><span>A real difference.</span></h1>
+    <h1 id="welcome-heading">Your shifts. <br>Your time. <br><span>All in one place.</span></h1>
     <p>A simpler way to record the work you do,<br class="desktop-only"> so you can get back to what matters.</p>
     <div class="brand-art" aria-hidden="true"><div class="art-ring ring-blue"></div><div class="art-ring ring-green"></div><div class="art-dot"></div><span class="art-spark">✳</span><div class="art-caption">Little moments.<br><strong>Lasting impact.</strong></div></div>
     <div class="welcome-foot"><span class="pill-dot"></span> Supporting families across Glasgow</div>
   </section>
   <section class="login-panel" aria-labelledby="login-heading">
     <div class="mini-label"><span aria-hidden="true">↗</span> GEEZA BREAK STAFF PORTAL</div>
-    <h2 id="login-heading">Welcome back.</h2><p class="muted">Sign in to manage your timesheets.</p>
+    <h2 id="login-heading">Welcome back.</h2><p class="muted">Use your work email and the password you chose.</p>
     <form method="post" class="stack-form">{% csrf_token %}{% include "staff_portal/fields.html" %}
       <div class="form-side-link"><a href="{% url 'staff:reset_password' %}">Forgot your password?</a></div>
       {% include "staff_portal/captcha.html" %}
       <button class="button primary full" type="submit">Sign in <span aria-hidden="true">→</span></button>
     </form>
-    <div class="login-help"><strong>First time here?</strong><p><a href="{% url 'staff:activate_account' %}">Set up your staff account</a> using your registered work email. You will receive a private link to choose your password.</p></div>
+    <div class="login-help"><strong>First time here?</strong><p>Set up your account with your registered work email. We’ll email you a private link to choose your password.</p><a class="button secondary full" href="{% url 'staff:activate_account' %}">Set up my account →</a><p class="account-help">No invitation yet? Ask your administrator to add your work email in Staff access.</p></div>
     <div class="privacy-note"><span aria-hidden="true">◇</span> Your timesheets are only shared with authorised reviewers.</div>
   </section>
 </div>

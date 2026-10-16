@@ -13,7 +13,7 @@ and no demo login. Credentials and records are stored outside this repository.
 
 1. Open the staff portal on a phone, tablet or computer.
 2. Sign in with your registered work email and personal password.
-3. Choose **Add new timesheet**, select the first date you worked, then choose
+3. Choose **Start my timesheet** (or **Add another month**), select the first date you worked, then choose
    **Continue to shifts**. An existing draft opens so you can continue it; an already
    submitted month shows a clear explanation and a link to the claim. Use the date picker inside each shift.
    For another month or year, expand **Different month or year?**, choose a date and
@@ -24,7 +24,7 @@ and no demo login. Credentials and records are stored outside this repository.
    scroll the horizontal grid. The saved total and save/submit controls follow the entries.
 4. Save a draft or submit the complete timesheet in one action.
 5. An authorised finance reviewer can review, return or approve another employee's sheet.
-6. Export a summary or detailed CSV, or print/save a PDF.
+6. Download a saved timesheet as Excel, or print/save a PDF. Save draft before downloading new changes.
 7. Submission email status is displayed on the timesheet; email delivery must be configured.
 
 **Review mode only:** all accounts are fictional. Shared demo users can see each other's changes when using
@@ -41,13 +41,41 @@ owner-account flow, dedicated database, costs and cutover checks.
 `APP_ENV=production` requires persistent PostgreSQL, real CAPTCHA and email delivery.
 The one-use setup link lets the owner choose their own password. Startup never resets
 that password. Sample accounts and role switching are unavailable outside review mode.
-The sign-in page's **Set up your staff account** link sends a fresh activation email
+The sign-in page's **Set up my account** link sends a fresh activation email
 only to an enabled, registered staff address that still needs activation. It does not
 allow public self-registration or reveal whether an address belongs to the organisation.
 
+### Staff and finance access
+
+An administrator uses **Staff access → Add employee** to enter a confirmed work email
+and choose **Employee**, **Finance**, or **Administrator**. After saving, choose **Invite**
+beside the person. Each recipient sets their own password through the private email link.
+The site does not publish or share staff passwords. Existing users can use **Forgot your password?**.
+
+Give the finance officer the **Finance** role. Finance users land on **Finance dashboard**
+after signing in and can still open **My own timesheets**. Staff without finance access
+can view and download only their own records.
+
+### Finance downloads
+
+Choose the month, employee and status, then **Show timesheets**. The displayed totals
+and every export follow those filters:
+
+- **Download team Excel**: one workbook with a team summary and all recorded shifts.
+- **Download individual files**: a ZIP containing that summary plus one Excel file for
+  every matching timesheet. Unique timesheet references prevent duplicate names overwriting files.
+- **Excel** beside an employee: their current saved timesheet, including status and revision.
+- Summary CSV, detailed CSV and Print/PDF remain available below the team list.
+
+Missing timesheets appear in the summary; no individual file is invented for them.
+Draft, returned and submitted hours are separated from approved hours. Downloads show
+current saved records, while submission emails retain their original immutable snapshots.
+Downloading does not approve hours, change a timesheet or send an email. All downloads
+require an active authorised account, are marked private/no-store and are recorded in the audit history.
+
 ## Phone and app navigation
 
-On phones, the bottom navigation provides **My hours**, **Add work**, **Review** for
+On phones, the bottom navigation provides **My hours**, **Add work**, **Finance** for
 reviewers, and **More** for account and staff settings. The layout accounts for phone
 safe areas, uses labelled controls and keeps keyboard focus and action feedback visible.
 The same pages retain a desktop sidebar and horizontal entry rows on larger screens.

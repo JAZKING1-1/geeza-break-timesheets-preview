@@ -47,6 +47,8 @@ class StaffProfile(models.Model):
             return "Active"
         if self.email and self.user_id:
             return "Invited"
+        if self.email:
+            return "Ready to invite"
         return "Awaiting email"
 
     def clean(self):

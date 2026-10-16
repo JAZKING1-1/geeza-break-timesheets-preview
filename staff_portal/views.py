@@ -4,6 +4,7 @@ import email
 import email.header
 import re
 from collections import defaultdict
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -18,6 +19,8 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .accounts import issue_link
 from .bulk import MAX_ROWS, RowErrors, monthly_formset, save_month
+from .excel import XLSX_CONTENT_TYPE, submission_workbook
+from .exports import finance_workbook, timesheet_archive
 from .forms import EntryForm, MonthForm, ProfileForm, WorkDateForm
 from .models import AuditEvent, PasswordLink, StaffProfile, TimeEntry, Timesheet
 from .security import portal_required
@@ -52,7 +55,7 @@ def dashboard(request):
     current = next((item for item in sheets if item.month == month), None)
     return render(request, "staff_portal/dashboard.html", {
         "current": current, "sheets": sheets, "month": month,
-        "pending_count": Timesheet.objects.filter(status="submitted").exclude(staff=request.staff).count() if request.staff.can_review else 0})
+        "pending_count": Timesheet.objects.filter(status="submitted", month=month).exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 
 @require_http_methods(["GET", "POST"])
@@ -197,11 +200,18 @@ def report_data(request):
     month = month_value(request.GET.get("month"))
     profiles = StaffProfile.objects.select_related("user").filter(Q(enabled=True) | Q(timesheets__month=month)).distinct()
     staff_id = request.GET.get("employee", "")
-    if staff_id.isdigit():
+    selected_status = request.GET.get("status", "")
+    # An invalid filter must never silently broaden a finance download.
+    if staff_id and not (staff_id.isascii() and staff_id.isdecimal() and len(staff_id) <= 18):
+        raise Http404("Choose an employee from the list.")
+    if selected_status not in ("", "draft", "submitted", "approved", "returned", "missing", "not_activated"):
+        raise Http404("Choose a valid status.")
+    if request.GET.get("month") and request.GET["month"] != month.strftime("%Y-%m"):
+        raise Http404("Choose a valid month.")
+    if staff_id:
         profiles = profiles.filter(pk=int(staff_id))
     sheet_map = {s.staff_id: s for s in Timesheet.objects.filter(month=month, staff__in=profiles)
                  .select_related("staff").prefetch_related("entries__category")}
-    selected_status = request.GET.get("status", "")
     rows, categories = [], defaultdict(lambda: {"approved": 0, "pending": 0})
     totals = {"approved": 0, "pending": 0, "submitted": 0, "missing": 0, "returned": 0}
     for profile in profiles:
@@ -222,6 +232,8 @@ def report_data(request):
                 categories[entry.category.name][bucket] += entry.minutes
     return {"month": month, "rows": rows, "employee_filter": staff_id, "status_filter": selected_status,
             "employees": StaffProfile.objects.all(), "totals": totals,
+            "sheet_count": sum(row["sheet"] is not None for row in rows),
+            "download_query": urlencode({"month": month.strftime("%Y-%m"), "employee": staff_id, "status": selected_status}),
             "approved_hours": hours_decimal(totals["approved"]), "pending_hours": hours_decimal(totals["pending"]),
             "category_rows": [{"name": name, "approved": hours_decimal(t["approved"]),
                                "pending": hours_decimal(t["pending"])} for name, t in sorted(categories.items())]}
@@ -268,10 +280,41 @@ def export_report(request):
     return response
 
 
+@require_http_methods(["GET"])
+@portal_required("review")
+def export_workbooks(request):
+    data = report_data(request)
+    kind = request.GET.get("format", "xlsx")
+    if kind not in ("xlsx", "zip"):
+        raise Http404
+    filename, content = timesheet_archive(data) if kind == "zip" else finance_workbook(data)
+    response = HttpResponse(content, content_type="application/zip" if kind == "zip" else XLSX_CONTENT_TYPE)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    audit(request.user, "Finance workbook downloaded", request.staff,
+          month=str(data["month"]), format=kind, employee=data["employee_filter"],
+          status=data["status_filter"], timesheets=data["sheet_count"])
+    return response
+
+
+@require_http_methods(["GET"])
+@portal_required()
+def download_sheet(request, pk):
+    item = permitted_sheet(request, pk)
+    filename, content = submission_workbook(item, submitted_snapshot=False)
+    response = HttpResponse(content, content_type=XLSX_CONTENT_TYPE)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    audit(request.user, "Timesheet downloaded", item.staff, item, revision=item.revision, status=item.status)
+    return response
+
+
 @portal_required("admin")
 def staff_list(request):
+    profiles = list(StaffProfile.objects.select_related("user"))
     return render(request, "staff_portal/staff_list.html", {
-        "profiles": StaffProfile.objects.select_related("user"), "events": AuditEvent.objects.select_related("staff", "actor").all()[:30]})
+        "profiles": profiles,
+        "active_count": sum(p.account_status == "Active" for p in profiles),
+        "setup_count": sum(p.enabled and p.account_status != "Active" for p in profiles),
+        "events": AuditEvent.objects.select_related("staff", "actor").all()[:30]})
 
 
 @portal_required("admin")

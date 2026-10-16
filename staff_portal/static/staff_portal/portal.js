@@ -1,4 +1,17 @@
 (() => {
+  document.querySelectorAll("[data-password-for]").forEach(button => {
+    const input = document.getElementById(button.dataset.passwordFor);
+    if (!input) return;
+    button.hidden = false;
+    const label = button.getAttribute("aria-label").replace(/^Show /, "");
+    button.addEventListener("click", () => {
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      button.textContent = show ? "Hide" : "Show";
+      button.setAttribute("aria-label", (show ? "Hide " : "Show ") + label);
+      button.setAttribute("aria-pressed", String(show));
+    });
+  });
   document.querySelectorAll("[data-calendar-for]").forEach(button => {
     const input = document.getElementById(button.dataset.calendarFor);
     if (!input || typeof input.showPicker !== "function") return;

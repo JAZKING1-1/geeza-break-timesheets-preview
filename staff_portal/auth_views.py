@@ -31,7 +31,7 @@ def signed_in(request, user):
     request.session.pop("pending_user", None)
     request.session.pop("pending_until", None)
     audit(user, "Signed in", user.staff_profile)
-    return redirect("staff:dashboard")
+    return redirect("staff:reports" if user.staff_profile.role == StaffProfile.Role.FINANCE else "staff:dashboard")
 
 
 @sensitive_post_parameters("password")
@@ -40,7 +40,7 @@ def login(request):
         from .preview import preview_login
         return preview_login(request)
     if request.user.is_authenticated and StaffProfile.objects.filter(user=request.user, enabled=True).exists():
-        return redirect("staff:dashboard")
+        return redirect("staff:reports" if request.user.staff_profile.role == StaffProfile.Role.FINANCE else "staff:dashboard")
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         email = form.cleaned_data["email"].lower()

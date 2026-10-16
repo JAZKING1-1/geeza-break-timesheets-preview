@@ -7,7 +7,7 @@
   {% if field.is_hidden %}{{ field }}{% else %}
   <div class="field{% if field.name == 'notes' %} wide{% endif %}">
     <label for="{{ field.id_for_label }}">{{ field.label }}{% if not field.field.required %}<span class="optional">Optional</span>{% endif %}</label>
-    {{ field }}
+    {% if field.field.widget.input_type == 'password' %}<div class="password-field">{{ field }}<button class="password-toggle" type="button" data-password-for="{{ field.id_for_label }}" aria-controls="{{ field.id_for_label }}" aria-label="Show {{ field.label|lower }}" aria-pressed="false" hidden>Show</button></div>{% else %}{{ field }}{% endif %}
     {% if field.help_text %}<div class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>{% endif %}
     {% if field.errors %}<ul class="field-errors" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
   </div>

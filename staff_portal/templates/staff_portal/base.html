@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="{% static 'staff_portal/comfort.css' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/date-picker.css' %}">
   <link rel="stylesheet" href="{% static 'staff_portal/mobile.css' %}">
+  <link rel="stylesheet" href="{% static 'staff_portal/workspace.css' %}">
   <script defer src="{% static 'staff_portal/portal.js' %}"></script>
   <script defer src="{% static 'staff_portal/mobile.js' %}"></script>
   {% if captcha_action and not captcha_simulated and not portal_preview %}<script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>{% endif %}
@@ -28,7 +29,7 @@
   <div class="nav-label">YOUR WORKSPACE</div>
   <nav aria-label="Staff navigation">
     <a href="{% url 'staff:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or own %}aria-current="page"{% endif %}><span aria-hidden="true">◷</span> My timesheets</a>
-    {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span> Review &amp; reports</a>{% endif %}
+    {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span> Finance dashboard</a>{% endif %}
     {% if portal_staff.is_administrator %}<a href="{% url 'staff:staff_list' %}" {% if request.resolver_match.url_name == 'staff_list' %}aria-current="page"{% endif %}><span aria-hidden="true">♧</span> Staff access</a>{% endif %}
     {% if not portal_preview %}<a href="{% url 'staff:security' %}" {% if request.resolver_match.url_name == 'security' %}aria-current="page"{% endif %}><span aria-hidden="true">◇</span> Account security</a>{% endif %}
     {% if portal_staff.is_administrator %}{% if portal_local or portal_preview %}<a href="{% url 'staff:local_emails' %}"><span aria-hidden="true">✉</span> Email previews</a>{% endif %}{% endif %}
@@ -53,7 +54,7 @@
 <nav class="mobile-nav no-print" aria-label="Mobile navigation">
   <a href="{% url 'staff:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or own %}aria-current="page"{% endif %}><span aria-hidden="true">◷</span><span>My hours</span></a>
   <a href="{% url 'staff:new_sheet' %}" {% if request.resolver_match.url_name == 'new_sheet' %}aria-current="page"{% endif %}><span aria-hidden="true">＋</span><span>Add work</span></a>
-  {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span><span>Review</span></a>{% endif %}
+  {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span><span>Finance</span></a>{% endif %}
   <details class="mobile-menu"><summary><span aria-hidden="true">☰</span><span>More</span></summary><div class="mobile-menu-panel"><strong>{{ portal_staff.name }}</strong><small>{{ portal_staff.get_role_display }}</small>
     {% if portal_staff.is_administrator %}<a href="{% url 'staff:staff_list' %}">Manage staff access</a>{% endif %}
     {% if not portal_preview %}<a href="{% url 'staff:security' %}">Account security</a>{% endif %}

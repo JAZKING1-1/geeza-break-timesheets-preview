@@ -1,0 +1,77 @@
+/* Shared, task-focused staff and finance screens in Geeza Break's colours. */
+.mobile-cell-label { display:none; }
+.workflow-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; padding:0; margin:26px 0 34px; list-style:none; }
+.workflow-steps li { display:flex; align-items:flex-start; gap:12px; min-width:0; }
+.workflow-steps li>span { display:grid; place-items:center; flex:0 0 34px; height:34px; border-radius:50%; background:#ffde2a; color:#17353f; font-weight:800; }
+.workflow-steps strong,.workflow-steps small { display:block; }
+.workflow-steps strong { font-size:16px; }
+.workflow-steps small { font-size:14px; line-height:1.6; color:#405963; margin-top:3px; }
+.download-panel { padding:28px; margin-bottom:28px; border:2px solid #a2bf50; border-radius:18px; background:#f0fad5; }
+.download-intro { display:flex; align-items:center; gap:18px; margin-bottom:22px; }
+.download-icon { display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:#a8cf38; color:#17353f; font-size:32px; flex-shrink:0; }
+.download-intro h2 { margin:6px 0 8px; }
+.download-intro p { margin:0; font-size:16px; }
+.download-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+.download-options .button { width:100%; }
+.download-options p { font-size:14px; line-height:1.6; margin:10px 0 0; color:#405963; }
+.download-note { border-top:1px solid #a2bf50; padding-top:16px; margin:18px 0 0; font-size:14px; color:#405963; }
+.report-tools { display:flex; flex-wrap:wrap; align-items:center; gap:12px 24px; padding:16px 24px; border-top:1px solid #b8d3d8; font-size:15px; }
+.report-tools>span { font-weight:700; }
+.record-actions { white-space:nowrap; }
+.record-actions .table-link+.table-link { margin-left:18px; }
+.category-details { max-width:none; }
+.category-details>summary { padding:20px 24px; font-size:18px; font-weight:700; cursor:pointer; }
+.access-guide { padding:24px; border:1px solid #b8d3d8; border-radius:18px; background:#e7f6fb; margin:24px 0; }
+.access-guide .workflow-steps { margin:20px 0 0; }
+.password-field { position:relative; }
+.password-field input { padding-right:78px; }
+.password-toggle { position:absolute; inset-block:4px; right:4px; min-width:66px; border:0; border-radius:6px; background:#e7f6fb; color:#005b80; font-weight:700; cursor:pointer; }
+.password-toggle:hover { background:#d1eef8; }
+.login-help .account-help { font-size:14px; margin:14px 0 0; }
+.download-saved-note { font-size:14px; color:#405963; }
+@media screen and (max-width:1100px) {
+  .workflow-steps { gap:14px; }
+  .stat-card>small { white-space:normal; }
+}
+@media screen and (max-width:700px) {
+  .workflow-steps { grid-template-columns:1fr; gap:16px; margin:22px 0 28px; }
+  .workflow-steps li>span { flex-basis:30px; height:30px; }
+  .download-panel { padding:20px 16px; }
+  .download-icon { display:none; }
+  .download-intro h2 { font-size:23px; }
+  .download-options { grid-template-columns:1fr; gap:20px; }
+  .download-note { font-size:13px; }
+  .filter-bar { padding:18px; gap:14px; }
+  .filter-bar .field,.filter-bar .field:first-child { flex-basis:100%; }
+  .filter-bar .button { width:100%; }
+  .filter-bar input,.filter-bar select { font-size:16px; }
+  .stat-card>small { font-size:11px; }
+  .stat-card p { font-size:13px; }
+  .mobile-records { overflow:visible; padding:0 16px 16px; }
+  .mobile-records table { display:block; min-width:0; width:100%; }
+  .mobile-records thead { position:absolute; width:1px; height:1px; clip-path:inset(50%); overflow:hidden; }
+  .mobile-records tbody { display:grid; gap:12px; }
+  .mobile-records tbody tr { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; padding:18px; border:1px solid #b8d3d8; border-radius:12px; background:#fff; }
+  .mobile-records tbody td,.mobile-records tbody th { display:block; min-width:0; padding:0; border:0; white-space:normal; overflow-wrap:anywhere; background:transparent; text-align:left; }
+  .mobile-records tbody th { font-size:18px; }
+  .mobile-cell-label { display:block; font-size:13px; font-weight:600; color:#405963; margin-bottom:2px; }
+  .mobile-records .record-actions { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; border-top:1px solid #d2e3e7; padding-top:8px; }
+  .mobile-records .record-actions .table-link { margin:0; min-height:44px; display:inline-flex; align-items:center; }
+  .mobile-records tfoot { display:block; margin-top:16px; }
+  .mobile-records tfoot tr { display:flex; flex-wrap:wrap; justify-content:space-between; background:#e3f9a9; }
+  .mobile-records tfoot th,.mobile-records tfoot td { padding:12px; border:0; }
+  .staff-records { padding-top:16px; }
+  .staff-records .row-actions { display:flex; align-items:center; gap:18px; }
+  .report-tools { gap:10px 20px; padding:16px; }
+  .report-tools>span { flex-basis:100%; }
+  .report-tools>a { padding-block:10px; }
+  .access-guide { padding:20px 16px; }
+  .welcome-panel h1 br { display:none; }
+  .welcome-panel h1 span { display:block; }
+  .welcome-panel .eyebrow { font-size:12px; }
+  .topline .actions { gap:8px 16px; }
+}
+@media print {
+  .workflow-steps,.access-guide { display:none; }
+  .mobile-cell-label { display:none; }
+}
