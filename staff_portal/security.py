@@ -1,5 +1,6 @@
 import datetime as dt
 import hashlib
+import logging
 import secrets
 from functools import wraps
 
@@ -14,6 +15,15 @@ from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
 from .models import RateBucket, StaffProfile
+
+logger = logging.getLogger(__name__)
+
+
+def captcha_rejected(reason, action):
+    # Never log tokens, keys, request bodies, email addresses or provider payloads.
+    safe_action = action if action in {"login", "reset", "activate"} else "other"
+    logger.warning("Turnstile verification rejected: reason=%s action=%s", reason, safe_action)
+    return False
 
 
 def token_digest(token):
@@ -46,18 +56,33 @@ def verify_captcha(request, action):
     if settings.PORTAL_CAPTCHA_MODE == "simulate":
         return settings.PORTAL_LOCAL and request.POST.get("captcha") == "pass"
     token = request.POST.get("cf-turnstile-response", "")
-    if not token or len(token) > 2048 or not settings.TURNSTILE_SECRET_KEY:
-        return False
+    if not token:
+        return captcha_rejected("missing_token", action)
+    if len(token) > 2048:
+        return captcha_rejected("invalid_token_length", action)
+    if not settings.TURNSTILE_SECRET_KEY:
+        return captcha_rejected("missing_secret", action)
     try:
         response = requests.post("https://challenges.cloudflare.com/turnstile/v0/siteverify",
                                  data={"secret": settings.TURNSTILE_SECRET_KEY, "response": token},
                                  timeout=8)
         response.raise_for_status()
         result = response.json()
-        return (result.get("success") is True and result.get("action") == action
-                and result.get("hostname") in settings.TURNSTILE_HOSTNAMES)
     except (requests.RequestException, ValueError):
-        return False
+        return captcha_rejected("verification_service_unavailable", action)
+    if not isinstance(result, dict):
+        return captcha_rejected("invalid_provider_response", action)
+    if result.get("success") is not True:
+        known_codes = {"missing-input-secret", "invalid-input-secret", "missing-input-response",
+                       "invalid-input-response", "bad-request", "timeout-or-duplicate", "internal-error"}
+        codes = result.get("error-codes")
+        safe_codes = sorted({code for code in codes if isinstance(code, str) and code in known_codes}) if isinstance(codes, list) else []
+        return captcha_rejected("provider_" + ("_".join(safe_codes) or "rejected"), action)
+    if result.get("action") != action:
+        return captcha_rejected("action_mismatch", action)
+    if result.get("hostname") not in settings.TURNSTILE_HOSTNAMES:
+        return captcha_rejected("hostname_mismatch", action)
+    return True
 
 
 def portal_required(role=None):
