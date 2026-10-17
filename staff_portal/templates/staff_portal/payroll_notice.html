@@ -1,0 +1,8 @@
+<aside class="payroll-notice{% if payroll.overdue %} deadline-passed{% elif payroll.due_today %} deadline-today{% endif %}" aria-label="Timesheet deadline">
+  <span class="payroll-icon" aria-hidden="true">◷</span>
+  <div><span class="eyebrow">{{ payroll.month|date:"F Y" }} · TIMESHEET DEADLINE</span>
+    <p class="deadline-date">Last date to submit: <strong><time datetime="{{ payroll.deadline|date:'Y-m-d' }}">{{ payroll.deadline|date:"l j F Y" }}</time></strong></p>
+    <p>Payday: <time datetime="{{ payroll.payday|date:'Y-m-d' }}">{{ payroll.payday|date:"l j F Y" }}</time> · Submit 14 calendar days before payday.</p>
+    {% if payroll.overdue %}<span class="deadline-status">Deadline passed — outstanding timesheets can still be submitted.</span>{% elif payroll.due_today %}<span class="deadline-status">Due today — submit your timesheet today.</span>{% else %}<span class="deadline-status">{{ payroll.days_left }} day{{ payroll.days_left|pluralize }} left to submit.</span>{% endif %}
+  </div>
+</aside>

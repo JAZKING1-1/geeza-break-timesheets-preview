@@ -13,7 +13,7 @@ and no demo login. Credentials and records are stored outside this repository.
 
 1. Open the staff portal on a phone, tablet or computer.
 2. Sign in with your registered work email and personal password.
-3. Choose **Start my timesheet** (or **Add another month**), select the first date you worked, then choose
+3. Choose **Add new timesheet** (or **Add work** in the navigation), select the first date you worked, then choose
    **Continue to shifts**. An existing draft opens so you can continue it; an already
    submitted month shows a clear explanation and a link to the claim. Use the date picker inside each shift.
    For another month or year, expand **Different month or year?**, choose a date and
@@ -55,6 +55,31 @@ The site does not publish or share staff passwords. Existing users can use **For
 Give the finance officer the **Finance** role. Finance users land on **Finance dashboard**
 after signing in and can still open **My own timesheets**. Staff without finance access
 can view and download only their own records.
+
+### Monthly deadlines and follow-up
+
+The staff dashboard, each timesheet and the Finance dashboard show the submission
+deadline for the selected month. Payday is the **last Thursday of the month**, and
+the deadline is **14 calendar days earlier**, calculated using UK local dates. The
+current-month dashboard advances when the month changes; older timesheets keep their
+own month's deadline. The due date is inclusive. Late submissions remain possible.
+This rule does not move a deadline for bank holidays or change the monthly claim period.
+
+Finance and Administrators can select **Who still needs to submit?** / **Needs chasing**
+to list enabled staff with missing, draft or returned sheets, or accounts awaiting setup.
+The filter also applies to Excel, ZIP and CSV downloads. **Email employee** opens the
+reviewer's email app; it does not send a reminder automatically. Give team access only
+to authorised reviewers, such as Karen using her confirmed work email and the Finance role.
+
+### Delete an unsubmitted draft
+
+An employee can choose **Delete draft** beside their own timesheet or at the bottom of
+the editor. A separate confirmation page shows its month, shift count and saved hours.
+Deletion removes the draft and entries, retains the audit history, and allows a new
+timesheet for that month. A stale confirmation cannot delete newer work. Finance and
+Administrators cannot delete another employee's draft. Submitted, returned and approved
+payroll records, including emailed claim snapshots, are protected from deletion; use
+the review/correction flow for those records. No schema migration is needed for this update.
 
 ### Finance downloads
 

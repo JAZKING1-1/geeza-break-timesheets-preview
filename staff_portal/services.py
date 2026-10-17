@@ -75,6 +75,25 @@ def delete_entry(actor, sheet_id, revision, entry_id):
 
 
 @transaction.atomic
+def delete_draft(actor, sheet_id, revision):
+    sheet, profile = locked_sheet(actor, sheet_id, revision)
+    # Team review access does not grant permission to discard another person's work.
+    if sheet.staff.user_id != actor.pk:
+        raise PermissionDenied
+    if not sheet.deletable or sheet.notifications.exists():
+        raise ValidationError("Only unsubmitted drafts can be deleted. Ask your reviewer to return a submitted timesheet for corrections.")
+    # Preserve each history event independently of the removed draft.
+    for event in sheet.events.select_for_update():
+        event.detail = {**event.detail, "deleted_timesheet_id": sheet.pk, "month": str(sheet.month)}
+        event.timesheet = None
+        event.save(update_fields=["detail", "timesheet"])
+    audit(actor, "Draft timesheet deleted", sheet.staff,
+          deleted_timesheet_id=sheet.pk, month=str(sheet.month),
+          total_minutes=sheet.total_minutes, shift_count=sheet.entries.count())
+    sheet.delete()
+
+
+@transaction.atomic
 def transition(actor, sheet_id, revision, action, reason="", *, notify=True):
     sheet, profile = locked_sheet(actor, sheet_id, revision)
     reason = reason.strip()

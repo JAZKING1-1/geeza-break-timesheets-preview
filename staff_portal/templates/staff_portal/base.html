@@ -32,6 +32,7 @@
   <div class="nav-label">YOUR WORKSPACE</div>
   <nav aria-label="Staff navigation">
     <a href="{% url 'staff:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or own %}aria-current="page"{% endif %}><span aria-hidden="true">◷</span> My timesheets</a>
+    <a href="{% url 'staff:new_sheet' %}" {% if request.resolver_match.url_name == 'new_sheet' %}aria-current="page"{% endif %}><span aria-hidden="true">＋</span> Add work</a>
     {% if portal_staff.can_review %}<a href="{% url 'staff:reports' %}" {% if request.resolver_match.url_name == 'reports' or can_review %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span> Finance dashboard</a>{% endif %}
     {% if portal_staff.is_administrator %}<a href="{% url 'staff:staff_list' %}" {% if request.resolver_match.url_name == 'staff_list' %}aria-current="page"{% endif %}><span aria-hidden="true">♧</span> Staff access</a>{% endif %}
     {% if not portal_preview %}<a href="{% url 'staff:security' %}" {% if request.resolver_match.url_name == 'security' %}aria-current="page"{% endif %}><span aria-hidden="true">◇</span> Account security</a>{% endif %}

@@ -4,9 +4,9 @@
     {% include 'staff_portal/row_field.html' with field=row.date %}
     {% if row.non_field_errors %}<ul class="field-errors row-error" id="{{ row.prefix }}-errors">{% for error in row.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
   </td>
-  <td class="service-cell">{% include 'staff_portal/row_field.html' with field=row.category %}</td>
   <td class="start-cell">{% include 'staff_portal/row_field.html' with field=row.start_time %}</td>
   <td class="finish-cell">{% include 'staff_portal/row_field.html' with field=row.end_time %}</td>
+  <td class="service-cell">{% include 'staff_portal/row_field.html' with field=row.category %}</td>
   <td class="break-cell">{% include 'staff_portal/row_field.html' with field=row.break_minutes %}</td>
   <td class="purpose-cell">
     {% include 'staff_portal/row_field.html' with field=row.notes %}

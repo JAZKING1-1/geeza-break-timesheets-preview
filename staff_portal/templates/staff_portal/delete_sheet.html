@@ -1,0 +1,16 @@
+{% extends 'staff_portal/base.html' %}
+{% block title %}Delete draft timesheet{% endblock %}
+{% block content %}
+<div class="topline"><a href="{% url 'staff:sheet' sheet.pk %}">← Back to timesheet</a></div>
+<header class="page-heading"><div><span class="eyebrow">{{ sheet.month|date:"F Y" }}</span><h1>Delete this draft?</h1><p>Check the details before deleting your timesheet.</p></div></header>
+{% if errors %}<div class="error-summary" role="alert" tabindex="-1"><h2>Draft not deleted</h2>{% for error in errors %}<p>{{ error }}</p>{% endfor %}<a href="{% url 'staff:delete_sheet' sheet.pk %}">Reload and check the latest draft</a></div>{% endif %}
+<section class="panel form-panel delete-panel">
+  <h2>{{ sheet.month|date:"F Y" }} · {{ sheet.staff.name }}</h2>
+  <p><strong>{{ sheet.entries.count }} shift{{ sheet.entries.count|pluralize }} · {{ sheet.total_display }}</strong></p>
+  <p>This removes the draft and its saved shifts. You cannot undo this. You can start another timesheet for the same month.</p>
+  <p class="help">The deletion is recorded in the audit history. Submitted and approved timesheets cannot be deleted.</p>
+  <form method="post">{% csrf_token %}<input type="hidden" name="revision" value="{{ revision }}">
+    <div class="actions"><a class="button secondary" href="{% url 'staff:sheet' sheet.pk %}">Keep my draft</a><button class="button delete-button" name="confirm" value="delete" data-pending-label="Deleting draft…">Delete draft</button></div>
+  </form>
+</section>
+{% endblock %}

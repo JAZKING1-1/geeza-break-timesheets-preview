@@ -34,7 +34,7 @@
     if (!saveState || saveState.classList.contains("has-changes")) return;
     saveState.classList.add("has-changes");
     saveState.querySelector("[data-save-label]").textContent = "You have unsaved changes.";
-    saveState.querySelector("[data-save-detail]").textContent = "Choose Save draft to keep your work, or Submit timesheet when your month is complete.";
+    saveState.querySelector("[data-save-detail]").textContent = "Save draft to keep your work, or submit your hours for review by the deadline.";
   }
   document.querySelectorAll("form[data-unsaved]").forEach(form => {
     form.addEventListener("input", markUnsaved);
@@ -63,6 +63,7 @@
       const row = copy.content.querySelector("[data-entry-row]");
       document.getElementById("entry-rows").appendChild(row);
       total.value = index + 1;
+      row.classList.add("new-shift");
       row.querySelectorAll("select").forEach(showSelection);
       row.querySelector('input[name$="-date"]').focus();
       announcement.textContent = "Row " + (index + 1) + " added. Choose its date to begin.";

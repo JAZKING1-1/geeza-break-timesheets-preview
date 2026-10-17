@@ -24,8 +24,8 @@ class RowForm(forms.Form):
     end_time = forms.TimeField(label="Finish", input_formats=["%H:%M"], widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}))
     break_minutes = forms.IntegerField(label="Break (min)", min_value=0, max_value=1439, initial=0,
                                       widget=forms.NumberInput(attrs={"min": 0, "max": 1439}))
-    notes = forms.CharField(label="Purpose", required=False, max_length=500,
-                           widget=forms.Textarea(attrs={"rows": 2, "maxlength": 500, "placeholder": "What was the work for?"}))
+    notes = forms.CharField(label="Note (optional)", required=False, max_length=500,
+                           widget=forms.Textarea(attrs={"rows": 2, "maxlength": 500, "placeholder": "A short note about your work"}))
     end_date = forms.DateField(label="Finish date", required=False, input_formats=["%Y-%m-%d"],
                                widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
     start_fold = forms.TypedChoiceField(label="Start occurrence", choices=TimeEntry._meta.get_field("start_fold").choices,

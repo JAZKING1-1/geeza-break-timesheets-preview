@@ -23,8 +23,9 @@ from .excel import XLSX_CONTENT_TYPE, submission_workbook
 from .exports import finance_workbook, timesheet_archive
 from .forms import EntryForm, MonthForm, ProfileForm, WorkDateForm
 from .models import AuditEvent, PasswordLink, StaffProfile, TimeEntry, Timesheet
+from .payroll import payroll_dates
 from .security import portal_required
-from .services import audit, delete_entry, hours_decimal, save_entry, transition
+from .services import audit, delete_draft, delete_entry, hours_decimal, save_entry, transition
 
 
 def month_value(value=None):
@@ -54,7 +55,7 @@ def dashboard(request):
     sheets = list(Timesheet.objects.filter(staff=request.staff).prefetch_related("entries"))
     current = next((item for item in sheets if item.month == month), None)
     return render(request, "staff_portal/dashboard.html", {
-        "current": current, "sheets": sheets, "month": month,
+        "current": current, "sheets": sheets, "month": month, "payroll": payroll_dates(month),
         "pending_count": Timesheet.objects.filter(status="submitted", month=month).exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 
@@ -136,11 +137,38 @@ def sheet(request, pk):
             status = 400
     return render(request, "staff_portal/sheet.html", {
         "sheet": item, "own": own, "can_edit": can_edit, "editor": editor,
+        "payroll": payroll_dates(item.month),
         "work_date_form": WorkDateForm(initial={"work_date": picker_date}),
         "editor_errors": errors, "editor_revision": revision_value(request) if request.method == "POST" else item.revision,
         "can_review": request.staff.can_review and not own,
         "notification": item.notifications.first(),
         "events": item.events.select_related("actor").all()[:100]}, status=status)
+
+
+@require_http_methods(["GET", "POST"])
+@portal_required()
+def delete_sheet(request, pk):
+    # Even Finance and Administrators may delete only their own unsubmitted drafts.
+    item = get_object_or_404(Timesheet, pk=pk, staff=request.staff)
+    if not item.deletable or item.notifications.exists():
+        raise PermissionDenied("Submitted payroll records cannot be deleted.")
+    errors, status = [], 200
+    if request.method == "POST":
+        if request.POST.get("confirm") != "delete":
+            errors, status = ["Confirm deletion using the Delete draft button below."], 400
+        else:
+            try:
+                delete_draft(request.user, pk, revision_value(request))
+            except (ValidationError, OperationalError, IntegrityError) as exc:
+                errors = exc.messages if isinstance(exc, ValidationError) else ["Another change is being saved. Reload this page and try again."]
+                status = 409
+            else:
+                messages.success(request, f"Your {item.month:%B %Y} draft was deleted. You can start a new timesheet for this month.")
+                return redirect("staff:dashboard")
+    return render(request, "staff_portal/delete_sheet.html", {
+        "sheet": item, "own": True, "errors": errors,
+        "revision": revision_value(request) if request.method == "POST" else item.revision,
+    }, status=status)
 
 
 @portal_required()
@@ -204,7 +232,7 @@ def report_data(request):
     # An invalid filter must never silently broaden a finance download.
     if staff_id and not (staff_id.isascii() and staff_id.isdecimal() and len(staff_id) <= 18):
         raise Http404("Choose an employee from the list.")
-    if selected_status not in ("", "draft", "submitted", "approved", "returned", "missing", "not_activated"):
+    if selected_status not in ("", "draft", "submitted", "approved", "returned", "missing", "not_activated", "needs_chasing"):
         raise Http404("Choose a valid status.")
     if request.GET.get("month") and request.GET["month"] != month.strftime("%Y-%m"):
         raise Http404("Choose a valid month.")
@@ -213,16 +241,20 @@ def report_data(request):
     sheet_map = {s.staff_id: s for s in Timesheet.objects.filter(month=month, staff__in=profiles)
                  .select_related("staff").prefetch_related("entries__category")}
     rows, categories = [], defaultdict(lambda: {"approved": 0, "pending": 0})
-    totals = {"approved": 0, "pending": 0, "submitted": 0, "missing": 0, "returned": 0}
+    totals = {"approved": 0, "pending": 0, "submitted": 0, "missing": 0, "returned": 0, "chasing": 0}
     for profile in profiles:
         sheet = sheet_map.get(profile.pk)
         status = sheet.status if sheet else ("missing" if profile.user_id and profile.user.is_active else "not_activated")
-        if selected_status and selected_status != status:
+        needs_chasing = profile.enabled and status in ("draft", "returned", "missing", "not_activated")
+        if selected_status == "needs_chasing" and not needs_chasing:
+            continue
+        if selected_status and selected_status != "needs_chasing" and selected_status != status:
             continue
         minutes = sheet.total_minutes if sheet else 0
         rows.append({"profile": profile, "sheet": sheet, "status": status,
                      "label": sheet.get_status_display() if sheet else ("Missing" if status == "missing" else "Not activated"),
-                     "minutes": minutes, "hours": hours_decimal(minutes)})
+                     "minutes": minutes, "hours": hours_decimal(minutes), "needs_chasing": needs_chasing})
+        totals["chasing"] += int(needs_chasing)
         if status in ("submitted", "missing", "returned"):
             totals[status] += 1
         if sheet:
@@ -230,7 +262,7 @@ def report_data(request):
             totals[bucket] += minutes
             for entry in sheet.entries.all():
                 categories[entry.category.name][bucket] += entry.minutes
-    return {"month": month, "rows": rows, "employee_filter": staff_id, "status_filter": selected_status,
+    return {"month": month, "payroll": payroll_dates(month), "rows": rows, "employee_filter": staff_id, "status_filter": selected_status,
             "employees": StaffProfile.objects.all(), "totals": totals,
             "sheet_count": sum(row["sheet"] is not None for row in rows),
             "download_query": urlencode({"month": month.strftime("%Y-%m"), "employee": staff_id, "status": selected_status}),

@@ -3,12 +3,12 @@
 {% block content %}
 <div class="topline"><a href="{% if own %}{% url 'staff:dashboard' %}{% else %}{% url 'staff:reports' %}{% endif %}">← {% if own %}My timesheets{% else %}Finance dashboard{% endif %}</a><div class="actions no-print"><a class="table-link" href="{% url 'staff:download_sheet' sheet.pk %}">Download Excel ↓</a><button class="text-button" type="button" data-print>Print / PDF</button></div></div>
 <header class="page-heading"><div><span class="eyebrow">MONTHLY TIMESHEET</span><h1>{{ sheet.month|date:"F Y" }}</h1><p>{{ sheet.staff.name }} · {{ sheet.staff.job_title }}</p></div><span class="status {{ sheet.status }}">{{ sheet.get_status_display }}</span></header>
+{% include 'staff_portal/payroll_notice.html' %}
 {% if not can_edit %}<div class="sheet-summary"><div><small>RECORDED TIME</small><strong>{{ sheet.total_display }}</strong></div><div><small>SHIFTS</small><strong>{{ sheet.entries.count }}</strong></div><div><small>LAST UPDATED</small><strong class="smaller">{{ sheet.updated_at|date:"j M, H:i" }}</strong></div></div>{% endif %}
 {% if sheet.review_note %}<div class="notice warning"><strong>Reviewer’s note:</strong> {{ sheet.review_note }}</div>{% endif %}
 {% if not sheet.editable %}<p class="muted">{% if sheet.status == 'approved' %}This timesheet is approved. A reviewer must reopen it before any corrections.{% else %}This timesheet is with your reviewer. Entries are locked while it is reviewed.{% endif %}</p>{% endif %}
 {% if own %}<details class="other-month no-print"><summary>Different month or year?</summary>{% include 'staff_portal/work_date_picker.html' %}</details>{% endif %}
 {% if can_edit %}
-<p class="download-saved-note">Excel downloads include your saved shifts. Save draft before downloading any changes.</p>
 {% include 'staff_portal/bulk_editor.html' %}
 {% else %}
 <section class="panel"><div class="section-heading"><div><h2>Recorded shifts</h2><p>UK local times. Unpaid breaks are deducted from your hours.</p></div>{% if can_edit %}<a class="button primary" href="{% url 'staff:entry_add' sheet.pk %}">＋ Add a shift</a>{% endif %}</div>
@@ -17,6 +17,7 @@
 {% empty %}<tr><td colspan="6"><div class="empty-state"><span aria-hidden="true">＋</span><h3>Let’s add your first shift.</h3><p>Your hours will be calculated as you save each entry.</p></div></td></tr>{% endfor %}
 </tbody><tfoot><tr><th scope="row" colspan="4">Total time worked</th><td colspan="2">{{ sheet.total_display }}</td></tr></tfoot></table></div></section>
 {% endif %}
+{% if own and sheet.deletable %}<div class="draft-tools no-print"><a class="danger" href="{% url 'staff:delete_sheet' sheet.pk %}">Delete this draft</a><span>You’ll check the details before deleting.</span></div>{% endif %}
 {% if notification %}<aside class="notice {% if notification.status == 'failed' %}warning{% endif %}" aria-label="Submission notification"><strong>{{ notification.get_status_display }}</strong><p>{{ notification.detail }}{% if can_review or portal_staff.is_administrator %} Recipient: {{ notification.recipient|default:"Not configured" }}.{% endif %}</p></aside>{% endif %}
 {% if can_review and sheet.status == 'submitted' or can_review and sheet.status == 'approved' %}
 <section class="panel review-panel no-print"><h2>Review this timesheet</h2><form method="post" action="{% url 'staff:sheet_action' sheet.pk %}">{% csrf_token %}<input type="hidden" name="revision" value="{{ sheet.revision }}"><div class="field"><label for="reason">Review note</label><textarea id="reason" name="reason" rows="3" maxlength="500" aria-describedby="reason-help"></textarea><p id="reason-help" class="help">Required when returning or reopening. Explain the correction needed.</p></div><div class="actions">{% if sheet.status == 'submitted' %}<button name="action" value="approve" class="button primary">Approve timesheet</button><button name="action" value="return" class="button secondary">Return for correction</button>{% else %}<button name="action" value="reopen" class="button secondary">Reopen for correction</button>{% endif %}</div></form></section>{% endif %}

@@ -93,6 +93,10 @@ class Timesheet(models.Model):
         return self.status in (self.Status.DRAFT, self.Status.RETURNED)
 
     @property
+    def deletable(self):
+        return self.status == self.Status.DRAFT and self.submitted_at is None
+
+    @property
     def total_minutes(self):
         return sum(entry.minutes for entry in self.entries.all())
 

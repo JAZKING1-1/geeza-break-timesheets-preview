@@ -19,6 +19,7 @@ urlpatterns = [
     path("timesheets/new/", views.new_sheet, name="new_sheet"),
     path("timesheets/<int:pk>/", views.sheet, name="sheet"),
     path("timesheets/<int:pk>/download/", views.download_sheet, name="download_sheet"),
+    path("timesheets/<int:pk>/delete/", views.delete_sheet, name="delete_sheet"),
     path("timesheets/<int:pk>/action/", views.sheet_action, name="sheet_action"),
     path("timesheets/<int:pk>/add/", views.entry, name="entry_add"),
     path("timesheets/<int:pk>/entries/<int:entry_id>/", views.entry, name="entry_edit"),
