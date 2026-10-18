@@ -1,0 +1,22 @@
+{% extends 'staff_portal/base.html' %}
+{% block title %}Submit feedback{% endblock %}
+{% block content %}
+<div class="topline"><a href="{% url 'staff:dashboard' %}">← My timesheets</a></div>
+<header class="page-heading"><div><span class="eyebrow">YOUR WORKSPACE / FEEDBACK</span><h1>Submit feedback</h1><p>Choose a saved session below. You can send feedback before or after submitting your timesheet.</p></div></header>
+<form method="get" class="filter-bar" aria-label="Find a feedback session">
+  {% for field in filter_form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
+  <button class="button secondary">Show sessions</button><a href="{% url 'staff:feedback_home' %}?status=all">View all sessions</a>
+</form>
+<section class="panel feedback-section" aria-labelledby="sessions-heading">
+  <h2 id="sessions-heading">Your sessions</h2>
+  <p>Respite sessions use the full feedback form. For other work, confirm that respite feedback does not apply.</p>
+  <ul class="feedback-list feedback-session-list">
+  {% for row in page %}
+    <li><div><strong>{{ row.entry.date|date:'l j F Y' }} · {{ row.entry.start_time|time:'H:i' }}–{{ row.entry.end_time|time:'H:i' }}</strong><span>{{ row.entry.category }} · {{ row.entry.timesheet.reference }}</span><span class="status {% if row.complete %}approved{% else %}draft{% endif %}">{{ row.state }}</span></div><a class="button {% if row.complete %}secondary{% else %}primary{% endif %}" href="{% url 'staff:feedback' row.entry.timesheet_id row.entry.pk %}">{% if row.complete %}View feedback{% else %}Add feedback{% endif %}<span class="sr-only"> for {{ row.entry.date|date:'j F Y' }} at {{ row.entry.start_time|time:'H:i' }}</span></a></li>
+  {% empty %}
+    <li><div><strong>No sessions in this view.</strong><span>Try View all sessions, change the month, or save a shift in a timesheet first.</span><a href="{% url 'staff:new_sheet' %}">＋ Add new timesheet</a></div></li>
+  {% endfor %}
+  </ul>
+  {% if page.has_other_pages %}<nav class="feedback-pagination" aria-label="Feedback pages">{% if page.has_previous %}<a class="button secondary" href="?{{ filter_query }}&amp;page={{ page.previous_page_number }}">← Previous</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="button secondary" href="?{{ filter_query }}&amp;page={{ page.next_page_number }}">Next →</a>{% endif %}</nav>{% endif %}
+</section>
+{% endblock %}

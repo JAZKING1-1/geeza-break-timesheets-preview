@@ -3,11 +3,11 @@
 {% block extra_scripts %}<script defer src="{% static 'staff_portal/feedback.js' %}"></script>{% endblock %}
 {% block title %}Session feedback · {{ sheet.reference }}{% endblock %}
 {% block content %}
-<div class="topline"><a href="{% url 'staff:sheet' sheet.pk %}#session-feedback">← Back to timesheet {{ sheet.reference }}</a></div>
-<header class="page-heading"><div><span class="eyebrow">STEP 2 · SESSION FEEDBACK</span><h1>Respite Feedback</h1><p>{{ sheet.staff.name }} · {{ entry.date|date:'l j F Y' }} · {{ entry.start_time|time:'H:i' }}–{{ entry.end_time|time:'H:i' }} · {{ entry.category }}</p></div><span class="status {% if complete %}approved{% else %}draft{% endif %}">{% if complete %}Complete{% else %}Needs completion{% endif %}</span></header>
+<div class="topline"><a href="{% url 'staff:feedback_home' %}">← Back to feedback</a><a href="{% url 'staff:sheet' sheet.pk %}">View timesheet {{ sheet.reference }}</a></div>
+<header class="page-heading"><div><span class="eyebrow">SESSION FEEDBACK</span><h1>{% if can_edit %}Submit feedback{% else %}Session feedback{% endif %}</h1><p>{{ sheet.staff.name }} · {{ entry.date|date:'l j F Y' }} · {{ entry.start_time|time:'H:i' }}–{{ entry.end_time|time:'H:i' }} · {{ entry.category }}</p></div><span class="status {% if complete %}approved{% else %}draft{% endif %}">{% if complete %}Submitted{% else %}Not submitted{% endif %}</span></header>
 <p class="notice">This uses the form documented in the Charitylog project. Responses are saved in this staff portal; they are not sent to Charitylog. Follow your usual Charitylog recording process too.</p>
 <p class="help">You and the portal administrator can read these answers. Finance sees completion status, not your care answers. For urgent concerns, contact your line manager directly.</p>
-<p><a href="#feedback-save">Go to save or complete feedback ↓</a></p>
+<p><a href="#feedback-save">Go to save or submit feedback ↓</a></p>
 <form method="post" data-unsaved data-session-feedback novalidate>
 {% csrf_token %}<input type="hidden" name="revision" value="{{ revision }}">
 {% if form.errors %}<div class="error-summary" tabindex="-1" role="alert"><h2>Check your feedback</h2><p>Your answers are still here. Nothing has been saved.</p>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}<ul>{% for field in form %}{% for error in field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>{% endfor %}{% endfor %}</ul></div>{% endif %}
@@ -18,6 +18,6 @@
 {% if section.heading == 'Outdoor Risk Assessment' or section.heading == 'Prescribed Medication Administration' %}<p class="help">If the first answer is No, skip the remaining questions in this section.</p>{% else %}<p class="help">Complete the questions that apply. Details are required when you answer Yes; explain any difference from planned times.</p>{% endif %}
 <div class="form-grid">{% for field in section.fields %}{% include 'staff_portal/feedback_field.html' %}{% endfor %}</div></section>{% endfor %}
 </div>
-{% if can_edit %}<section class="panel feedback-section" id="feedback-save">{% include 'staff_portal/feedback_field.html' with field=form.confirmed %}<div class="actions"><button class="button secondary" name="action" value="draft" data-pending-label="Saving feedback…">Save feedback draft</button><button class="button primary" name="action" value="complete" data-pending-label="Checking feedback…">Complete feedback ✓</button></div><p class="help">Complete feedback returns you to the timesheet. It does not send your hours yet.</p></section>{% else %}<p class="notice" id="feedback-save">This feedback is read-only.</p>{% endif %}
+{% if can_edit %}<section class="panel feedback-section" id="feedback-save">{% include 'staff_portal/feedback_field.html' with field=form.confirmed %}<div class="actions"><button class="button secondary" name="action" value="draft" data-pending-label="Saving feedback…">Save feedback draft</button><button class="button primary" name="action" value="complete" data-pending-label="Submitting feedback…">Submit feedback ✓</button></div><p class="help">Saves your feedback in the staff portal. Your timesheet is submitted separately and its status will stay the same.</p></section>{% else %}<p class="notice" id="feedback-save">This feedback is read-only.</p>{% endif %}
 </form>
 {% endblock %}

@@ -48,20 +48,12 @@ class FeedbackTests(TestCase):
         self.sheet.refresh_from_db()
         return record
 
-    def test_incomplete_draft_and_classic_submit_are_blocked_without_email(self):
+    def test_classic_submit_does_not_require_feedback(self):
         with patch("staff_portal.notifications.queue_submission") as send:
-            for phase in ("missing", "draft"):
-                if phase == "draft":
-                    save_feedback(self.staff.user, self.sheet.pk, self.sheet.revision, self.entry.pk,
-                                  {"provider_feedback": "Saved for later"})
-                    self.sheet.refresh_from_db()
-                revision = self.sheet.revision
-                with self.assertRaisesMessage(ValidationError, "Complete the session feedback"):
-                    transition(self.staff.user, self.sheet.pk, revision, "submit")
-                self.sheet.refresh_from_db()
-                self.assertEqual(self.sheet.revision, revision)
-                self.assertEqual(self.sheet.status, "draft")
-            send.assert_not_called()
+            result = transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit")
+            self.assertEqual(result.status, "submitted")
+            send.assert_called_once()
+        self.assertFalse(SessionFeedback.objects.exists())
 
     def test_complete_feedback_and_weekly_claim_submission(self):
         self.complete()
@@ -76,8 +68,9 @@ class FeedbackTests(TestCase):
         entry = TimeEntry(timesheet=second, date=dt.date(2026, 10, 12), end_date=dt.date(2026, 10, 12),
                           start_time=dt.time(9), end_time=dt.time(11), category=self.category)
         save_entry(self.staff.user, second.pk, 0, entry)
-        with self.assertRaises(ValidationError):
-            transition(self.staff.user, second.pk, 1, "submit")
+        result = transition(self.staff.user, second.pk, 1, "submit", notify=False)
+        self.assertEqual(result.status, "submitted")
+        self.assertFalse(current_complete(entry))
 
     def test_respite_cannot_use_bulk_or_forged_not_applicable(self):
         confirm_non_respite(self.sheet)
@@ -97,8 +90,9 @@ class FeedbackTests(TestCase):
         self.entry.category = WorkCategory.objects.create(name="Administration")
         save_entry(self.staff.user, self.sheet.pk, self.sheet.revision, self.entry)
         self.sheet.refresh_from_db()
-        with self.assertRaises(ValidationError):
-            transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit")
+        incomplete = self.client.post(self.url, {"applies": "no", "action": "complete", "revision": self.sheet.revision})
+        self.assertEqual(incomplete.status_code, 400)
+        self.assertFalse(SessionFeedback.objects.exists())
         data = {"applies": "no", "not_applicable_reason": "Office administration", "confirmed": "on"}
         save_feedback(self.staff.user, self.sheet.pk, self.sheet.revision, self.entry.pk, data, complete=True)
         self.sheet.refresh_from_db()
@@ -124,10 +118,10 @@ class FeedbackTests(TestCase):
         self.sheet.refresh_from_db()
         self.assertFalse(current_complete(self.entry))
         self.assertEqual(SessionFeedback.objects.get(pk=record.pk).answers["provider_feedback"], "Private fictional care answer")
-        with self.assertRaises(ValidationError):
-            transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit")
+        self.sheet = transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit", notify=False)
         self.complete()
         self.assertTrue(current_complete(self.entry))
+        self.assertEqual(self.sheet.status, "submitted")
 
     def test_stale_feedback_cannot_overwrite_or_advance_revision(self):
         self.complete()
@@ -138,15 +132,18 @@ class FeedbackTests(TestCase):
         response = self.client.post(self.url, {**self.answers(), "revision": 1, "action": "complete"})
         self.assertContains(response, 'name="revision" value="1"', status_code=409)
 
-    def test_bulk_submit_rolls_back_new_rows_until_feedback_complete(self):
-        self.complete()
+    def test_bulk_submit_saves_new_rows_with_incomplete_feedback(self):
+        save_feedback(self.staff.user, self.sheet.pk, self.sheet.revision, self.entry.pk, {"provider_feedback": "Saved for later"})
+        self.sheet.refresh_from_db()
         row = {key: getattr(self.entry, key) for key in ENTRY_FIELDS}
         rows = [{**row, "entry_id": self.entry.pk}, {**row, "date": dt.date(2026, 10, 6), "end_date": dt.date(2026, 10, 6)}]
-        with self.assertRaises(ValidationError):
-            save_month(self.staff.user, self.sheet.pk, self.sheet.revision, rows, submit=True, confirm_other_work=True)
-        self.assertEqual(self.sheet.entries.count(), 1)
+        with patch("staff_portal.notifications.queue_submission") as send:
+            result = save_month(self.staff.user, self.sheet.pk, self.sheet.revision, rows, submit=True)
+            send.assert_called_once()
+        self.assertEqual(result.status, "submitted")
+        self.assertEqual(self.sheet.entries.count(), 2)
         self.assertEqual(SessionFeedback.objects.count(), 1)
-        self.assertFalse(self.sheet.notifications.exists())
+        self.assertIsNone(SessionFeedback.objects.get().completed_at)
 
     def test_owner_admin_finance_other_and_disabled_permissions(self):
         self.complete()
@@ -162,15 +159,75 @@ class FeedbackTests(TestCase):
         self.client.force_login(self.staff.user)
         self.assertEqual(self.client.get(self.url).status_code, 302)
 
-    def test_csrf_and_submitted_feedback_are_protected(self):
+    def test_csrf_and_feedback_after_payroll_submission(self):
         client = Client(enforce_csrf_checks=True)
         client.force_login(self.staff.user)
         self.assertEqual(client.post(self.url, self.answers()).status_code, 403)
+        self.sheet = transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit", notify=False)
+        submitted_at = self.sheet.submitted_at
+        with patch("staff_portal.notifications.queue_submission") as send:
+            response = self.client.post(self.url, {**self.answers(), "action": "complete", "revision": self.sheet.revision})
+            self.assertRedirects(response, reverse("staff:feedback_home"))
+            send.assert_not_called()
+        self.sheet.refresh_from_db()
+        self.assertEqual(self.sheet.status, "submitted")
+        self.assertEqual(self.sheet.submitted_at, submitted_at)
+        self.assertEqual(self.sheet.total_minutes, 120)
+        self.assertTrue(current_complete(self.entry))
+
+    def test_feedback_after_approval_preserves_payroll_and_review(self):
+        self.sheet = transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit", notify=False)
+        self.sheet = transition(self.people["Finance"].user, self.sheet.pk, self.sheet.revision, "approve")
+        approved_at, reviewer = self.sheet.approved_at, self.sheet.reviewed_by_id
         self.complete()
-        transition(self.staff.user, self.sheet.pk, self.sheet.revision, "submit", notify=False)
-        self.assertEqual(self.client.post(self.url, {"action": "draft"}).status_code, 403)
-        with self.assertRaises(PermissionDenied):
-            save_feedback(self.staff.user, self.sheet.pk, self.sheet.revision + 1, self.entry.pk, {})
+        self.assertEqual(self.sheet.status, "approved")
+        self.assertEqual(self.sheet.approved_at, approved_at)
+        self.assertEqual(self.sheet.reviewed_by_id, reviewer)
+        self.assertEqual(self.sheet.total_minutes, 120)
+        self.assertTrue(current_complete(self.entry))
+
+    def test_feedback_home_is_private_filterable_and_available_in_navigation(self):
+        home = reverse("staff:feedback_home")
+        self.assertContains(self.client.get(reverse("staff:dashboard")), 'href="' + home + '"')
+        response = self.client.get(home)
+        self.assertContains(response, self.url)
+        self.assertContains(response, "Not started")
+        self.assertContains(response, 'aria-label="Submit feedback" aria-current="page"')
+        self.assertNotContains(self.client.get(home, {"month": "2026-09"}), self.url)
+        self.assertContains(self.client.get(home, {"month": "2026-10"}), self.url)
+        self.assertTrue(self.client.get(home, {"month": "bad"}).context["filter_form"].errors)
+        self.complete()
+        self.assertNotContains(self.client.get(home), self.url)
+        self.assertContains(self.client.get(home, {"status": "submitted"}), self.url)
+        self.assertContains(self.client.get(home, {"status": "all"}), self.url)
+        for person in ("Other", "Finance", "Admin"):
+            self.client.force_login(self.people[person].user)
+            self.assertNotContains(self.client.get(home, {"status": "all", "staff": self.staff.pk}), self.url)
+        self.client.logout()
+        self.assertEqual(self.client.get(home).status_code, 302)
+
+    def test_timesheet_has_no_feedback_step_and_feedback_draft_returns_home(self):
+        response = self.client.get(reverse("staff:sheet", args=[self.sheet.pk]))
+        self.assertNotContains(response, 'id="session-feedback"')
+        self.assertNotContains(response, 'value="feedback"')
+        self.assertNotContains(response, 'name="confirm_other_work"')
+        response = self.client.post(self.url, {"action": "draft", "revision": self.sheet.revision})
+        self.assertRedirects(response, reverse("staff:feedback_home"))
+        self.sheet.refresh_from_db()
+        self.assertEqual(self.sheet.status, "draft")
+        self.assertContains(self.client.get(reverse("staff:feedback_home")), "Draft")
+
+    def test_feedback_home_pagination_preserves_filters(self):
+        for day in range(6, 27):
+            entry = TimeEntry(timesheet=self.sheet, date=dt.date(2026, 10, day), end_date=dt.date(2026, 10, day),
+                              start_time=dt.time(9), end_time=dt.time(11), category=self.category)
+            entry.clean_timing()
+            entry.save()
+        response = self.client.get(reverse("staff:feedback_home"), {"status": "all", "month": "2026-10"})
+        self.assertEqual(len(response.context["page"]), 20)
+        self.assertContains(response, "month=2026-10&amp;status=all&amp;page=2")
+        response = self.client.get(reverse("staff:feedback_home"), {"status": "all", "month": "2026-10", "page": 2})
+        self.assertEqual(len(response.context["page"]), 2)
 
     def test_care_answers_do_not_leak_to_finance_excel_email_or_audit(self):
         self.complete()

@@ -149,6 +149,11 @@
 }
 
 /* Session feedback: readable groups and touch-sized navigation. */
+.feedback-shortcut{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px;margin-bottom:24px;border:2px solid #00789a;border-radius:18px;background:#e2f7ff}
+.feedback-shortcut h2{font-size:24px;margin:0 0 6px}.feedback-shortcut p{margin:0}.feedback-shortcut .button{flex-shrink:0}
+.feedback-session-list li>div{flex-direction:column;align-items:flex-start;min-width:0;overflow-wrap:anywhere}
+.feedback-pagination{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+@media(max-width:680px){.feedback-shortcut{padding:18px;align-items:stretch;flex-direction:column}.feedback-shortcut .button{width:100%}}
 .feedback-section{padding:24px;scroll-margin-top:24px}
 .feedback-section .form-grid{margin-top:20px}
 .feedback-section .field:has(textarea){grid-column:1/-1}

@@ -112,13 +112,12 @@ def sheet(request, pk):
                 for field in ("break_minutes", "start_fold", "end_fold"):
                     data[f"rows-{index}-{field}"] = "0"
             editor = monthly_formset(item, data)
-        elif action not in ("save", "submit", "feedback"):
+        elif action not in ("save", "submit"):
             errors.append("Choose Save draft or Submit timesheet.")
             status = 400
         elif editor.is_valid():
             try:
-                save_month(request.user, item.pk, revision_value(request), editor.cleaned_data, submit=action == "submit",
-                           confirm_other_work=request.POST.get("confirm_other_work") == "on")
+                save_month(request.user, item.pk, revision_value(request), editor.cleaned_data, submit=action == "submit")
             except RowErrors as exc:
                 for index, row_errors in exc.rows.items():
                     editor.forms[index].add_error(None, row_errors)
@@ -132,8 +131,6 @@ def sheet(request, pk):
                 status = 409
             else:
                 messages.success(request, "Your timesheet has been submitted for review." if action == "submit" else "All your rows have been saved as a draft.")
-                if action == "feedback":
-                    return redirect(reverse("staff:sheet", args=[pk]) + "#session-feedback")
                 return redirect("staff:sheet", pk=pk)
         else:
             status = 400
@@ -143,7 +140,7 @@ def sheet(request, pk):
         "work_date_form": WorkDateForm(initial={"work_date": picker_date}),
         "editor_errors": errors, "editor_revision": revision_value(request) if request.method == "POST" else item.revision,
         "can_review": request.staff.can_review and not own,
-        "feedback_rows": feedback_rows(item), "can_read_feedback": own or request.staff.is_administrator,
+        "feedback_rows": feedback_rows(item) if not own else [], "can_read_feedback": request.staff.is_administrator,
         "notification": item.notifications.first(),
         "events": item.events.select_related("actor").all()[:100]}, status=status)
 

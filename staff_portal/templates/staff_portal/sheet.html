@@ -17,7 +17,7 @@
 {% empty %}<tr><td colspan="6"><div class="empty-state"><span aria-hidden="true">＋</span><h3>Let’s add your first shift.</h3><p>Your hours will be calculated as you save each entry.</p></div></td></tr>{% endfor %}
 </tbody><tfoot><tr><th scope="row" colspan="4">Total time worked</th><td colspan="2">{{ sheet.total_display }}</td></tr></tfoot></table></div></section>
 {% endif %}
-{% include 'staff_portal/feedback_status.html' %}
+{% if not own %}{% include 'staff_portal/feedback_status.html' %}{% endif %}
 {% if own and sheet.deletable %}<div class="draft-tools no-print"><a class="danger" href="{% url 'staff:delete_sheet' sheet.pk %}">Delete this draft</a><span>You’ll check the details before deleting.</span></div>{% endif %}
 {% if notification %}<aside class="notice {% if notification.status == 'failed' %}warning{% endif %}" aria-label="Submission notification"><strong>{{ notification.get_status_display }}</strong><p>{{ notification.detail }}{% if can_review or portal_staff.is_administrator %} Recipient: {{ notification.recipient|default:"Not configured" }}.{% endif %}</p></aside>{% endif %}
 {% if can_review and sheet.status == 'submitted' or can_review and sheet.status == 'approved' %}

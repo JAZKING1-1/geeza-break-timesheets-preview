@@ -169,7 +169,7 @@ class FeedbackForm(forms.Form):
             return data
         def require(key):
             if not data.get(key) and key not in self.errors:
-                self.add_error(key, "Complete this before marking feedback complete.")
+                self.add_error(key, "Complete this before submitting feedback.")
         require("applies")
         require("confirmed")
         if data.get("applies") == "no":
@@ -219,15 +219,12 @@ def feedback_rows(sheet):
              "respite": respite_entry(e)} for e in sheet.entries.select_related("category")]
 
 
-def require_feedback(sheet):
-    if any(not row["complete"] for row in feedback_rows(sheet)):
-        raise ValidationError("Complete the session feedback before submitting. Save your shifts, then open Feedback below. For other work, confirm that Respite Feedback is not applicable.")
-
-
 @transaction.atomic
 def save_feedback(actor, sheet_id, revision, entry_id, data, *, complete=False):
     sheet, profile = locked_sheet(actor, sheet_id, revision)
-    if sheet.staff.user_id != actor.pk or not sheet.editable:
+    # Care feedback has its own submission flow, including after payroll review.
+    # The sheet lock/revision still protects against stale session details or tabs.
+    if sheet.staff.user_id != actor.pk:
         raise PermissionDenied
     entry = TimeEntry.objects.select_related("category").get(pk=entry_id, timesheet=sheet)
     form = FeedbackForm(data, entry=entry, complete=complete)

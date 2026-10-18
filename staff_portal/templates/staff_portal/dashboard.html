@@ -4,6 +4,7 @@
 <div class="topline"><span>YOUR WORKSPACE / MY TIMESHEETS</span><span>{% now "j F Y" %}</span></div>
 <header class="page-heading"><div><span class="eyebrow">GEEZA BREAK · STAFF SPACE</span><h1>Hello, {{ portal_staff.name }}.</h1><p>A simple place to record your shifts and send your hours for review.</p></div><div class="round-symbol" aria-hidden="true">◷</div></header>
 {% include 'staff_portal/payroll_notice.html' %}
+<section class="feedback-shortcut no-print" aria-labelledby="feedback-shortcut-heading"><div><h2 id="feedback-shortcut-heading">Session feedback</h2><p>Send feedback for a saved session, separately from your timesheet.</p></div><a class="button primary" href="{% url 'staff:feedback_home' %}">Submit feedback <span aria-hidden="true">→</span></a></section>
 {% if portal_staff.can_review %}<a class="review-prompt" href="{% url 'staff:reports' %}?month={{ month|date:'Y-m' }}{% if pending_count %}&amp;status=submitted{% endif %}"><span><strong>{% if pending_count %}{{ pending_count }} timesheet{{ pending_count|pluralize }} awaiting your review{% else %}Open the finance dashboard{% endif %}</strong><small>{{ month|date:"F Y" }} · Review the team’s hours and download Excel timesheets.</small></span><span aria-hidden="true">→</span></a>{% endif %}
 <section class="month-feature" aria-labelledby="current-month">
   <div><span class="eyebrow">YOUR CURRENT MONTH</span><h2 id="current-month">{{ month|date:"F Y" }}</h2>

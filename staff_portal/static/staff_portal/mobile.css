@@ -15,7 +15,7 @@
   .mobile-avatar { display:grid; place-items:center; flex:0 0 42px; height:42px; border-radius:50%; background:#dff577; font-weight:800; color:#28450b; border:1px solid #91ae42; }
   .portal-shell .workspace { margin:0; padding:22px max(18px,env(safe-area-inset-right)) 30px max(18px,env(safe-area-inset-left)); max-width:none; min-width:0; }
   .mobile-nav { position:fixed; z-index:80; bottom:0; inset-inline:0; display:flex; justify-content:space-around; background:#fff; border-top:1px solid #8eb6c0; box-shadow:0 -4px 18px #17353f12; padding:6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); min-height:var(--mobile-nav-height); }
-  .mobile-nav>a,.mobile-menu>summary { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; min-height:60px; padding:4px 8px; border-radius:10px; color:#244854; font-size:13px; line-height:1.4; font-weight:700; text-decoration:none; }
+  .mobile-nav>a,.mobile-menu>summary { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; min-height:60px; padding:4px 2px; border-radius:10px; color:#244854; font-size:13px; line-height:1.4; font-weight:700; text-decoration:none; }
   .mobile-nav>a,.mobile-menu { flex:1; min-width:0; }
   .mobile-nav>a>span:first-child,.mobile-menu>summary>span:first-child { font-size:26px; line-height:1.2; }
   .mobile-nav>a[aria-current=page],.mobile-menu[open]>summary { background:#daf3fc; color:#005775; box-shadow:inset 0 -3px #00789a; }

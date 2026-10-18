@@ -16,6 +16,7 @@ urlpatterns = [
     path("set-password/<str:token>/", auth_views.password_link, name="password_link"),
     path("security/", auth_views.security_settings, name="security"),
     path("keep-session/", views.keep_session, name="keep_session"),
+    path("feedback/", feedback_views.feedback_home, name="feedback_home"),
     path("timesheets/new/", views.new_sheet, name="new_sheet"),
     path("timesheets/<int:pk>/", views.sheet, name="sheet"),
     path("timesheets/<int:pk>/download/", views.download_sheet, name="download_sheet"),

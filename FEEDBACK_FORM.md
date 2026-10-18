@@ -30,20 +30,28 @@ Applied corrections:
 
 ## Flow and validation
 
-Save shifts, open Session feedback for each respite shift, save drafts as needed,
-then Complete feedback and Submit timesheet. Respite categories cannot use Not
-applicable. For other categories, staff must either complete feedback or explicitly
-confirm that no respite session took place. That declaration is recorded per shift.
-The bulk declaration never replaces an existing full feedback response.
+Feedback is submitted independently from payroll. The dashboard's Submit feedback
+button, desktop navigation and phone Feedback tab open `/staff/feedback/`. Staff
+choose one of their saved shifts, fill the form, then choose Submit feedback or
+Save feedback draft. The page filters sessions by month and To do / Submitted /
+All sessions, with pagination. A shift must be saved first so feedback is attached
+to the correct date and author; payroll submission is not required.
+
+Timesheets can be submitted with missing, draft or outdated feedback. There is no
+feedback step or non-respite checkbox in the staff timesheet editor. Feedback can
+be submitted before or after timesheet submission/approval without changing the
+payroll status, hours, review or notification. Full respite feedback is still
+validated when submitted; other work uses an explicit not-applicable confirmation
+on the separate feedback form. Existing responses and confirmations are retained.
 
 Core session and GIRFEC answers, the accuracy confirmation and relevant conditional
 details are checked on the server. Saving a draft permits incomplete answers but
 still validates field types and lengths. Changing any saved shift invalidates its
 completion fingerprint until feedback is reviewed again. The existing revision
-check prevents stale browser tabs from overwriting newer work. Submission checks
-apply to both bulk and classic routes and roll back failed submissions atomically.
-All new submissions (including returned claims) require current feedback. Existing
-submitted/approved claims are not rewritten or retrospectively marked complete.
+check prevents stale browser tabs from overwriting newer work. Feedback saves and
+timesheet saves share that revision lock; a feedback save updates the revision and
+last-updated timestamp, but never changes payroll status or amounts. Neither the
+bulk nor classic timesheet submission route checks feedback completion.
 
 ## Storage and access
 
@@ -53,9 +61,11 @@ version, completion time and shift fingerprint. Each week's timesheet has indepe
 feedback. Removing an editable shift/draft also removes its attached feedback; the
 existing audit history retains action metadata, never the private care answers.
 
-Only the author may edit an editable timesheet's feedback. The author and enabled
-Administrator may read it. Finance gets completion status only, including when
-using a direct feedback URL; care answers are excluded from payroll downloads,
+Only the author may edit feedback, including for submitted/approved timesheets.
+The author and enabled Administrator may read it. Each Feedback home lists only
+the signed-in user's sessions, even for administrators. Existing team-review pages
+retain their read-only status/access links. Finance gets completion status only,
+not access through a direct feedback URL; care answers are excluded from payroll downloads,
 notification bodies, Excel snapshots and general audit details. Existing login,
 CSRF, MFA, no-store responses and idle-session protections also apply here.
 

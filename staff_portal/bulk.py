@@ -83,7 +83,7 @@ class RowErrors(ValidationError):
 
 
 @transaction.atomic
-def save_month(actor, sheet_id, revision, rows, submit=False, confirm_other_work=False):
+def save_month(actor, sheet_id, revision, rows, submit=False):
     sheet, profile = locked_sheet(actor, sheet_id, revision)
     if sheet.staff.user_id != actor.pk or not sheet.editable:
         raise PermissionDenied
@@ -132,10 +132,6 @@ def save_month(actor, sheet_id, revision, rows, submit=False, confirm_other_work
         if before != after:
             entry.save()
             audit(actor, "Entry updated" if previous else "Entry added", sheet.staff, sheet, before=before, after=after)
-    if confirm_other_work:
-        from .feedback import confirm_non_respite
-        confirm_non_respite(sheet)
-        audit(actor, "Non-respite work confirmed", sheet.staff, sheet)
     if submit:
         submit_locked_sheet(actor, sheet)
     return sheet
