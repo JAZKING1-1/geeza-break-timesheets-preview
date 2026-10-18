@@ -6,8 +6,7 @@
 <section class="panel form-panel">
   <form method="post" action="{% url 'staff:new_sheet' %}">{% csrf_token %}
     {% include 'staff_portal/fields.html' %}
-    {% if existing_sheet %}<p><a href="{% url 'staff:sheet' existing_sheet.pk %}">View your {{ existing_sheet.month|date:'F Y' }} timesheet</a></p>{% endif %}
-    <p class="help">Shifts are grouped into one timesheet per month. An existing draft will open so you can continue it.</p>
+    <p class="help">Submit weekly or whenever your work is ready. Each new timesheet is separate, even in the same month. Add only shifts you have not already claimed. To continue saved work, return to My timesheets.</p>
     <div class="form-footer"><a href="{% url 'staff:dashboard' %}">Cancel</a><button class="button primary" data-pending-label="Opening entries…">Continue to shifts <span aria-hidden="true">→</span></button></div>
   </form>
 </section>

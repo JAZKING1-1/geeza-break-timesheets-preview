@@ -74,7 +74,7 @@ class ExcelSubmissionTests(TestCase):
         self.assertNotIn("Bcc", message)
         attachment, = message["Attachments"]
         self.assertEqual(attachment["ContentType"], XLSX_CONTENT_TYPE)
-        self.assertTrue(attachment["Filename"].endswith("-2026-09-r2.xlsx"))
+        self.assertTrue(attachment["Filename"].endswith(f"-2026-09-ts{self.sheet.pk}-r2.xlsx"))
         content = base64.b64decode(attachment["Base64Content"], validate=True)
         self.assertEqual(content, bytes(notice.attachment_content))
         cells, _, _ = workbook_cells(content)

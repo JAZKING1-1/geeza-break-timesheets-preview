@@ -33,6 +33,10 @@ class WorkDateForm(forms.Form):
                                widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
 
 
+class NewTimesheetForm(WorkDateForm):
+    creation_token = forms.UUIDField(widget=forms.HiddenInput())
+
+
 class EntryForm(forms.ModelForm):
     revision = forms.IntegerField(widget=forms.HiddenInput())
     class Meta:

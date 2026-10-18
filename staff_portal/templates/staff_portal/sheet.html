@@ -1,13 +1,13 @@
 {% extends "staff_portal/base.html" %}
-{% block title %}{{ sheet.month|date:"F Y" }} timesheet{% endblock %}
+{% block title %}{{ sheet.reference }} · {{ sheet.month|date:"F Y" }}{% endblock %}
 {% block content %}
 <div class="topline"><a href="{% if own %}{% url 'staff:dashboard' %}{% else %}{% url 'staff:reports' %}{% endif %}">← {% if own %}My timesheets{% else %}Finance dashboard{% endif %}</a><div class="actions no-print"><a class="table-link" href="{% url 'staff:download_sheet' sheet.pk %}">Download Excel ↓</a><button class="text-button" type="button" data-print>Print / PDF</button></div></div>
-<header class="page-heading"><div><span class="eyebrow">MONTHLY TIMESHEET</span><h1>{{ sheet.month|date:"F Y" }}</h1><p>{{ sheet.staff.name }} · {{ sheet.staff.job_title }}</p></div><span class="status {{ sheet.status }}">{{ sheet.get_status_display }}</span></header>
+<header class="page-heading"><div><span class="eyebrow">TIMESHEET {{ sheet.reference }}</span><h1>{{ sheet.month|date:"F Y" }}</h1><p>{{ sheet.staff.name }} · {{ sheet.staff.job_title }} · {{ sheet.work_dates }}</p></div><span class="status {{ sheet.status }}">{{ sheet.get_status_display }}</span></header>
 {% include 'staff_portal/payroll_notice.html' %}
 {% if not can_edit %}<div class="sheet-summary"><div><small>RECORDED TIME</small><strong>{{ sheet.total_display }}</strong></div><div><small>SHIFTS</small><strong>{{ sheet.entries.count }}</strong></div><div><small>LAST UPDATED</small><strong class="smaller">{{ sheet.updated_at|date:"j M, H:i" }}</strong></div></div>{% endif %}
 {% if sheet.review_note %}<div class="notice warning"><strong>Reviewer’s note:</strong> {{ sheet.review_note }}</div>{% endif %}
 {% if not sheet.editable %}<p class="muted">{% if sheet.status == 'approved' %}This timesheet is approved. A reviewer must reopen it before any corrections.{% else %}This timesheet is with your reviewer. Entries are locked while it is reviewed.{% endif %}</p>{% endif %}
-{% if own %}<details class="other-month no-print"><summary>Different month or year?</summary>{% include 'staff_portal/work_date_picker.html' %}</details>{% endif %}
+{% if own %}<p class="no-print"><a href="{% url 'staff:new_sheet' %}">＋ Add another timesheet</a> · Save this draft before starting another.</p>{% endif %}
 {% if can_edit %}
 {% include 'staff_portal/bulk_editor.html' %}
 {% else %}

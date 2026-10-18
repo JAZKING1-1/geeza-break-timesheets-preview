@@ -22,6 +22,21 @@ def hours_decimal(minutes):
     return str((Decimal(minutes) / 60).quantize(Decimal("0.01")))
 
 
+@transaction.atomic
+def create_timesheet(actor, day, token):
+    profile = StaffProfile.objects.select_for_update().filter(
+        user=actor, enabled=True, user__is_active=True).first()
+    if not profile:
+        raise PermissionDenied
+    sheet, created = Timesheet.objects.get_or_create(
+        staff=profile, creation_token=token, defaults={"month": day.replace(day=1)})
+    if sheet.month != day.replace(day=1):
+        raise ValidationError("This request already created a timesheet for another month. Open Add new timesheet to start another.")
+    if created:
+        audit(actor, "Timesheet created", profile, sheet)
+    return sheet
+
+
 def locked_sheet(actor, sheet_id, revision):
     profile = StaffProfile.objects.filter(user=actor, enabled=True, user__is_active=True).first()
     if not profile:

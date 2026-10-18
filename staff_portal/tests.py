@@ -115,9 +115,10 @@ class PortalTests(TestCase):
         save_entry(self.employee.user, leap.pk, 0, item)
         self.assertEqual(item.minutes, 450)
 
-    def test_duplicate_month_database_constraint(self):
-        with transaction.atomic(), self.assertRaises(IntegrityError):
-            Timesheet.objects.create(staff=self.employee, month=self.sheet.month)
+    def test_multiple_monthly_claims_preserve_existing_sheet(self):
+        second = Timesheet.objects.create(staff=self.employee, month=self.sheet.month)
+        self.assertNotEqual(second.pk, self.sheet.pk)
+        self.assertEqual(Timesheet.objects.filter(staff=self.employee, month=self.sheet.month).count(), 2)
 
     def test_stale_revision_cannot_change_sheet(self):
         first = self.add()

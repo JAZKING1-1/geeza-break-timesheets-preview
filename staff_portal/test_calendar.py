@@ -1,5 +1,6 @@
 import datetime as dt
 import io
+import uuid
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -21,7 +22,7 @@ class WorkDatePickerTests(TestCase):
         self.client.force_login(self.user)
 
     def test_date_opens_correct_month_and_prefills_only_new_row(self):
-        response = self.client.post(reverse("staff:new_sheet"), {"work_date": "2028-02-29"})
+        response = self.client.post(reverse("staff:new_sheet"), {"creation_token": str(uuid.uuid4()), "work_date": "2028-02-29"})
         sheet = Timesheet.objects.get(staff=self.staff, month=dt.date(2028, 2, 1))
         url = reverse("staff:sheet", args=[sheet.pk])
         self.assertRedirects(response, url + "?date=2028-02-29#entry-grid")
@@ -31,33 +32,36 @@ class WorkDatePickerTests(TestCase):
         self.assertEqual(field.field.widget.input_type, "date")
         self.assertEqual(field.field.widget.attrs["max"], "2028-02-29")
         self.assertFalse(sheet.entries.exists())
-        self.assertContains(response, 'data-calendar-for="id_work_date"')
-        self.assertContains(response, 'name="work_date"')
+        self.assertContains(response, "Add another timesheet")
 
     def test_start_page_does_not_create_records_and_invalid_date_stays_on_form(self):
         url = reverse("staff:new_sheet")
         self.assertContains(self.client.get(url), "Continue to shifts")
         self.assertFalse(Timesheet.objects.exists())
-        response = self.client.post(url, {"work_date": "2028-02-30"})
+        response = self.client.post(url, {"creation_token": str(uuid.uuid4()), "work_date": "2028-02-30"})
         self.assertContains(response, "Enter a valid date", status_code=400)
         self.assertFalse(Timesheet.objects.exists())
 
-    def test_submitted_month_is_explained_without_reopening_or_duplicating_it(self):
+    def test_new_week_preserves_submitted_sheet_and_repeat_post_is_idempotent(self):
         sheet = Timesheet.objects.create(staff=self.staff, month=dt.date(2028, 2, 1), status="submitted")
-        response = self.client.post(reverse("staff:new_sheet"), {"work_date": "2028-02-29"})
-        self.assertContains(response, "has already been submitted", status_code=409)
-        self.assertContains(response, reverse("staff:sheet", args=[sheet.pk]), status_code=409)
-        self.assertEqual(Timesheet.objects.count(), 1)
+        data = {"creation_token": str(uuid.uuid4()), "work_date": "2028-02-29"}
+        first = self.client.post(reverse("staff:new_sheet"), data)
+        second = self.client.post(reverse("staff:new_sheet"), data)
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(first.url, second.url)
+        self.assertNotIn(f"/{sheet.pk}/", first.url)
+        self.assertEqual(Timesheet.objects.count(), 2)
         sheet.refresh_from_db()
         self.assertEqual(sheet.status, "submitted")
 
-    def test_dates_in_all_months_and_years_reuse_existing_timesheets(self):
+    def test_dates_in_all_months_and_years_allow_separate_timesheets(self):
         for month in range(1, 13):
             value = f"2028-{month:02}-15"
             for _ in range(2):
-                self.assertEqual(self.client.post(reverse("staff:new_sheet"), {"work_date": value}).status_code, 302)
-        self.client.post(reverse("staff:new_sheet"), {"work_date": "2027-12-31"})
-        self.assertEqual(Timesheet.objects.filter(staff=self.staff).count(), 13)
+                self.assertEqual(self.client.post(reverse("staff:new_sheet"), {
+                    "creation_token": str(uuid.uuid4()), "work_date": value}).status_code, 302)
+        self.client.post(reverse("staff:new_sheet"), {"creation_token": str(uuid.uuid4()), "work_date": "2027-12-31"})
+        self.assertEqual(Timesheet.objects.filter(staff=self.staff).count(), 25)
         response = self.client.get(reverse("staff:dashboard"))
         self.assertContains(response, "December 2027")
         self.assertContains(response, "December 2028")
@@ -65,7 +69,7 @@ class WorkDatePickerTests(TestCase):
 
     def test_invalid_dates_create_nothing_and_month_scope_cannot_be_bypassed(self):
         for value in ["", "not-a-date", "2027-02-29", "2028-02-30"]:
-            self.client.post(reverse("staff:new_sheet"), {"work_date": value})
+            self.client.post(reverse("staff:new_sheet"), {"creation_token": str(uuid.uuid4()), "work_date": value})
         self.assertFalse(Timesheet.objects.exists())
         sheet = Timesheet.objects.create(staff=self.staff, month=dt.date(2028, 2, 1))
         form = monthly_formset(sheet).forms[0]
@@ -79,7 +83,7 @@ class WorkDatePickerTests(TestCase):
     def test_date_picker_preserves_other_employees_records(self):
         colleague = StaffProfile.objects.create(name="Another employee", job_title="Support")
         other = Timesheet.objects.create(staff=colleague, month=dt.date(2028, 2, 1))
-        self.client.post(reverse("staff:new_sheet"), {"work_date": "2028-02-29", "staff": colleague.pk})
+        self.client.post(reverse("staff:new_sheet"), {"creation_token": str(uuid.uuid4()), "work_date": "2028-02-29", "staff": colleague.pk})
         self.assertEqual(Timesheet.objects.filter(staff=self.staff).count(), 1)
         self.assertEqual(self.client.get(reverse("staff:sheet", args=[other.pk])).status_code, 404)
 

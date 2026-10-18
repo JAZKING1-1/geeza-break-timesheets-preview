@@ -6,6 +6,9 @@ if [ "${APP_ENV:-local}" = "production" ] || [ "${APP_ENV:-local}" = "developmen
   if [ -n "${STAFF_REGISTRATION_BATCH:-}" ]; then
     python manage.py register_staff --from-env --apply
   fi
+  if [ "${STAFF_ROSTER_AUDIT:-}" = "1" ]; then
+    python manage.py audit_staff
+  fi
 else
   python manage.py bootstrap_preview
 fi

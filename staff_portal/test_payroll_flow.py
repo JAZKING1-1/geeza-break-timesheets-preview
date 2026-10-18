@@ -1,3 +1,4 @@
+import uuid
 import datetime as dt
 from unittest.mock import patch
 
@@ -80,7 +81,7 @@ class PayrollFlowTests(TestCase):
         deletion = AuditEvent.objects.get(action="Draft timesheet deleted")
         self.assertEqual(deletion.detail["total_minutes"], 120)
         self.assertEqual(deletion.detail["month"], "2026-10-01")
-        self.assertEqual(self.client.post(reverse("staff:new_sheet"), {"work_date": "2026-10-12"}).status_code, 302)
+        self.assertEqual(self.client.post(reverse("staff:new_sheet"), {"work_date": "2026-10-12", "creation_token": str(uuid.uuid4())}).status_code, 302)
         self.assertNotEqual(Timesheet.objects.get(staff=self.owner, month=self.sheet.month).pk, pk)
 
     def test_stale_revision_cannot_delete_newer_work(self):

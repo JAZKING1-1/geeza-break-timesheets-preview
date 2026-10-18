@@ -101,6 +101,6 @@ def submission_workbook(sheet, *, submitted_snapshot=True):
         page.print_area(0, 0, total_row, 8)
 
     name = slugify(sheet.staff.name)[:65] or "employee"
-    reference = "" if submitted_snapshot else f"-ts{sheet.pk}-{sheet.status}"
+    reference = f"-ts{sheet.pk}" if submitted_snapshot else f"-ts{sheet.pk}-{sheet.status}"
     filename = f"timesheet-{name}-{sheet.month:%Y-%m}{reference}-r{sheet.revision}.xlsx"
     return filename, output.getvalue()

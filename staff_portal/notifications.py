@@ -27,7 +27,7 @@ def queue_submission(sheet):
         timesheet=sheet, revision=sheet.revision,
         defaults={"recipient": settings.TIMESHEET_NOTIFICATION_EMAIL,
                   "attachment_name": filename, "attachment_content": content,
-                  "subject": f"{review_prefix}Geeza Break: timesheet ready for review - {sheet.month:%B %Y}",
+                  "subject": f"{review_prefix}Geeza Break: {sheet.reference} ready for review - {sheet.month:%B %Y}",
                   "body": (f"{sheet.staff.name} has submitted their {sheet.month:%B %Y} timesheet.\n\n"
                            f"Recorded time: {sheet.total_display}\n"
                            f"Sign in with a finance or administrator account to review it:\n{url}\n"

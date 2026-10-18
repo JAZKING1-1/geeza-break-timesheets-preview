@@ -75,6 +75,7 @@ class Timesheet(models.Model):
 
     staff = models.ForeignKey(StaffProfile, on_delete=models.PROTECT, related_name="timesheets")
     month = models.DateField()
+    creation_token = models.UUIDField(null=True, blank=True, editable=False)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
     revision = models.PositiveIntegerField(default=0)
     submitted_at = models.DateTimeField(null=True, blank=True)
@@ -85,8 +86,20 @@ class Timesheet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-month", "staff__name"]
-        constraints = [models.UniqueConstraint(fields=["staff", "month"], name="one_sheet_per_month")]
+        ordering = ["-month", "staff__name", "-pk"]
+        constraints = [models.UniqueConstraint(fields=["staff", "creation_token"], name="unique_sheet_creation")]
+
+    @property
+    def reference(self):
+        return f"TS-{self.pk}"
+
+    @property
+    def work_dates(self):
+        entries = list(self.entries.all())
+        if not entries:
+            return "No shifts yet"
+        first, last = min(e.date for e in entries), max(e.end_date for e in entries)
+        return first.strftime("%d %b") if first == last else f"{first:%d %b} – {last:%d %b}"
 
     @property
     def editable(self):

@@ -3,6 +3,7 @@ import datetime as dt
 import email
 import email.header
 import re
+import uuid
 from collections import defaultdict
 from urllib.parse import urlencode
 
@@ -21,11 +22,11 @@ from .accounts import issue_link
 from .bulk import MAX_ROWS, RowErrors, monthly_formset, save_month
 from .excel import XLSX_CONTENT_TYPE, submission_workbook
 from .exports import finance_workbook, timesheet_archive
-from .forms import EntryForm, MonthForm, ProfileForm, WorkDateForm
+from .forms import EntryForm, NewTimesheetForm, ProfileForm, WorkDateForm
 from .models import AuditEvent, PasswordLink, StaffProfile, TimeEntry, Timesheet
 from .payroll import payroll_dates
 from .security import portal_required
-from .services import audit, delete_draft, delete_entry, hours_decimal, save_entry, transition
+from .services import audit, create_timesheet, delete_draft, delete_entry, hours_decimal, save_entry, transition
 
 
 def month_value(value=None):
@@ -53,38 +54,35 @@ def permitted_sheet(request, pk):
 def dashboard(request):
     month = month_value(request.GET.get("month"))
     sheets = list(Timesheet.objects.filter(staff=request.staff).prefetch_related("entries"))
-    current = next((item for item in sheets if item.month == month), None)
+    month_sheets = [item for item in sheets if item.month == month]
+    current = next((item for item in month_sheets if item.editable), next(iter(month_sheets), None))
+    minutes = sum(item.total_minutes for item in month_sheets)
     return render(request, "staff_portal/dashboard.html", {
         "current": current, "sheets": sheets, "month": month, "payroll": payroll_dates(month),
+        "month_count": len(month_sheets), "month_total": f"{minutes // 60}h {minutes % 60:02d}m",
         "pending_count": Timesheet.objects.filter(status="submitted", month=month).exclude(staff=request.staff).count() if request.staff.can_review else 0})
 
 
 @require_http_methods(["GET", "POST"])
 @portal_required()
 def new_sheet(request):
-    if request.method == "GET":
-        return render(request, "staff_portal/new_sheet.html", {
-            "form": WorkDateForm(initial={"work_date": timezone.localdate()})})
-    choosing_date = "work_date" in request.POST
-    form = WorkDateForm(request.POST) if choosing_date else MonthForm(request.POST)
-    if form.is_valid():
-        day = form.cleaned_data["work_date"] if choosing_date else form.cleaned_data["month"]
-        month = day.replace(day=1)
-        sheet, created = Timesheet.objects.get_or_create(staff=request.staff, month=month)
-        if not sheet.editable:
-            date_form = WorkDateForm({"work_date": day.isoformat()})
-            date_form.add_error(None, f"Your {month:%B %Y} timesheet has already been submitted. Choose another month, or ask your reviewer to return it if you need to add missing work.")
-            return render(request, "staff_portal/new_sheet.html", {"form": date_form, "existing_sheet": sheet}, status=409)
-        if created:
-            audit(request.user, "Timesheet created", request.staff, sheet)
+    form = NewTimesheetForm(request.POST if request.method == "POST" else None,
+                            initial={"work_date": timezone.localdate(), "creation_token": uuid.uuid4()})
+    status = 200
+    if request.method == "POST":
+        if form.is_valid():
+            day = form.cleaned_data["work_date"]
+            try:
+                item = create_timesheet(request.user, day, form.cleaned_data["creation_token"])
+            except (ValidationError, OperationalError, IntegrityError) as exc:
+                form.add_error(None, exc if isinstance(exc, ValidationError) else "Another change is being saved. Please try again.")
+                status = 409
+            else:
+                url = reverse("staff:sheet", args=[item.pk])
+                return redirect(f"{url}?date={day.isoformat()}#entry-grid")
         else:
-            messages.info(request, f"Opened your saved {month:%B %Y} draft. Add your remaining shifts below.")
-        url = reverse("staff:sheet", args=[sheet.pk])
-        return redirect(f"{url}?date={day.isoformat()}#entry-grid" if choosing_date else url)
-    if choosing_date:
-        return render(request, "staff_portal/new_sheet.html", {"form": form}, status=400)
-    messages.error(request, "Choose a valid calendar month.")
-    return redirect("staff:dashboard")
+            status = 400
+    return render(request, "staff_portal/new_sheet.html", {"form": form}, status=status)
 
 
 @portal_required()
@@ -238,33 +236,38 @@ def report_data(request):
         raise Http404("Choose a valid month.")
     if staff_id:
         profiles = profiles.filter(pk=int(staff_id))
-    sheet_map = {s.staff_id: s for s in Timesheet.objects.filter(month=month, staff__in=profiles)
-                 .select_related("staff").prefetch_related("entries__category")}
+    sheet_map = defaultdict(list)
+    for item in Timesheet.objects.filter(month=month, staff__in=profiles).select_related("staff").prefetch_related("entries__category"):
+        sheet_map[item.staff_id].append(item)
     rows, categories = [], defaultdict(lambda: {"approved": 0, "pending": 0})
     totals = {"approved": 0, "pending": 0, "submitted": 0, "missing": 0, "returned": 0, "chasing": 0}
+    chasing_staff = set()
     for profile in profiles:
-        sheet = sheet_map.get(profile.pk)
-        status = sheet.status if sheet else ("missing" if profile.user_id and profile.user.is_active else "not_activated")
-        needs_chasing = profile.enabled and status in ("draft", "returned", "missing", "not_activated")
-        if selected_status == "needs_chasing" and not needs_chasing:
-            continue
-        if selected_status and selected_status != "needs_chasing" and selected_status != status:
-            continue
-        minutes = sheet.total_minutes if sheet else 0
-        rows.append({"profile": profile, "sheet": sheet, "status": status,
-                     "label": sheet.get_status_display() if sheet else ("Missing" if status == "missing" else "Not activated"),
-                     "minutes": minutes, "hours": hours_decimal(minutes), "needs_chasing": needs_chasing})
-        totals["chasing"] += int(needs_chasing)
-        if status in ("submitted", "missing", "returned"):
-            totals[status] += 1
-        if sheet:
-            bucket = "approved" if status == "approved" else "pending"
-            totals[bucket] += minutes
-            for entry in sheet.entries.all():
-                categories[entry.category.name][bucket] += entry.minutes
+        for sheet in sheet_map.get(profile.pk, [None]):
+            status = sheet.status if sheet else ("missing" if profile.user_id and profile.user.is_active else "not_activated")
+            needs_chasing = profile.enabled and status in ("draft", "returned", "missing", "not_activated")
+            if selected_status == "needs_chasing" and not needs_chasing:
+                continue
+            if selected_status and selected_status != "needs_chasing" and selected_status != status:
+                continue
+            minutes = sheet.total_minutes if sheet else 0
+            rows.append({"profile": profile, "sheet": sheet, "status": status,
+                         "label": sheet.get_status_display() if sheet else ("Missing" if status == "missing" else "Not activated"),
+                         "minutes": minutes, "hours": hours_decimal(minutes), "needs_chasing": needs_chasing})
+            if needs_chasing:
+                chasing_staff.add(profile.pk)
+            if status in ("submitted", "missing", "returned"):
+                totals[status] += 1
+            if sheet:
+                bucket = "approved" if status == "approved" else "pending"
+                totals[bucket] += minutes
+                for entry in sheet.entries.all():
+                    categories[entry.category.name][bucket] += entry.minutes
+    totals["chasing"] = len(chasing_staff)
     return {"month": month, "payroll": payroll_dates(month), "rows": rows, "employee_filter": staff_id, "status_filter": selected_status,
             "employees": StaffProfile.objects.all(), "totals": totals,
             "sheet_count": sum(row["sheet"] is not None for row in rows),
+            "employee_count": len({row["profile"].pk for row in rows}),
             "download_query": urlencode({"month": month.strftime("%Y-%m"), "employee": staff_id, "status": selected_status}),
             "approved_hours": hours_decimal(totals["approved"]), "pending_hours": hours_decimal(totals["pending"]),
             "category_rows": [{"name": name, "approved": hours_decimal(t["approved"]),
@@ -291,7 +294,7 @@ def export_report(request):
     writer = csv.writer(response)
     if detail:
         writer.writerow(["Month", "Employee", "Job title", "Status", "Date", "Start", "End date", "End",
-                         "Start occurrence", "End occurrence", "Unpaid break minutes", "Work category", "Worked minutes", "Hours", "Purpose"])
+                         "Start occurrence", "End occurrence", "Unpaid break minutes", "Work category", "Worked minutes", "Hours", "Purpose", "Reference"])
         for row in data["rows"]:
             if row["sheet"]:
                 for entry in row["sheet"].entries.all():
@@ -299,14 +302,15 @@ def export_report(request):
                         data["month"].strftime("%Y-%m"), row["profile"].name, row["profile"].job_title,
                         row["label"], entry.date, entry.start_time, entry.end_date, entry.end_time,
                         entry.start_fold + 1, entry.end_fold + 1, entry.break_minutes, entry.category.name,
-                        entry.minutes, hours_decimal(entry.minutes), entry.notes]])
+                        entry.minutes, hours_decimal(entry.minutes), entry.notes, row["sheet"].reference]])
     else:
-        writer.writerow(["Month", "Employee", "Job title", "Status", "Worked minutes", "Hours", "Approved hours", "Pending hours"])
+        writer.writerow(["Month", "Employee", "Job title", "Status", "Worked minutes", "Hours", "Approved hours", "Pending hours", "Reference"])
         for row in data["rows"]:
             writer.writerow([csv_safe(v) for v in [data["month"].strftime("%Y-%m"), row["profile"].name,
                 row["profile"].job_title, row["label"], row["minutes"], row["hours"],
                 row["hours"] if row["status"] == "approved" else "0.00",
-                row["hours"] if row["status"] != "approved" else "0.00"]])
+                row["hours"] if row["status"] != "approved" else "0.00",
+                row["sheet"].reference if row["sheet"] else ""]])
     audit(request.user, "Report exported", request.staff, month=str(data["month"]), detailed=detail,
           employee=data["employee_filter"], status=data["status_filter"])
     return response

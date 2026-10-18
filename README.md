@@ -1,6 +1,6 @@
 # Geeza Break — staff timesheets
 
-A separate Django project for recording worked hours, submitting monthly claims and finance review. This repository
+A separate Django project for recording worked hours, submitting weekly or monthly claims and finance review. This repository
 contains only the portal and its public logo. It has no dependency on the main website,
 no copied Git history, no real staff roster, no payroll database and no Mailjet credentials.
 
@@ -157,10 +157,28 @@ to the main website database.
 
 ## Services and calendar
 
-The date popup is in the entry workflow, beside the timesheet controls. It accepts any
-valid day, month and year, including leap days, and opens the correct monthly sheet.
-The saved-month table retains all years. Row dates are validated against their month;
-choosing another month above the rows preserves existing records and approvals.
+Choose **Add new timesheet**, then the date of the first shift. Any valid month/year,
+including leap days, is supported. Each new request creates a separate timesheet,
+so staff may submit several weeks in the same month. Repeat button submissions reuse
+the same creation token and cannot create duplicate drafts. Existing work is opened
+from **My timesheets**; it is never overwritten by starting another claim.
+
+Shifts remain grouped by calendar month. Split a week spanning two months into two
+claims. Every sheet displays a `TS-…` reference and its recorded date range. Overlapping
+shifts across an employee's claims are rejected. Finance filters and downloads include
+all matching sheets, with unique Excel filenames and approved/pending hours separated.
+“Needs chasing” counts distinct staff with a draft, returned or missing submission;
+a submitted week alone does not prove that every shift in the month has been claimed.
+
+Migration `0005_multiple_timesheets` preserves existing records and removes only the
+one-sheet-per-month restriction, adding an idempotency token. Before reversing it,
+multiple claims per month would need to be reconciled; do not delete payroll records
+to roll back. Use a forward fix if a later release needs correction.
+
+For an authorised read-only roster check, run `python manage.py audit_staff`. It lists
+names, roles and setup status, without email addresses, passwords or account changes.
+An operator may temporarily set `STAFF_ROSTER_AUDIT=1` for a startup log audit; clear
+it afterwards to avoid repeated roster output.
 
 Service names were checked on 21 September 2026 against the public
 [services page](https://www.geezabreak.org.uk/services/) and
