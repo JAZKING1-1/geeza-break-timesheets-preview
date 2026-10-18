@@ -344,7 +344,7 @@ class PortalTests(TestCase):
     def test_reset_generic_response_and_recipient_only(self):
         for address in [self.employee.email, "unknown@example.test"]:
             response = self.client.post(reverse("staff:reset_password"), {"email": address, "captcha": "pass"})
-            self.assertContains(response, "If this address belongs to an active account")
+            self.assertContains(response, "If this email is registered for staff access")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.employee.email])
 

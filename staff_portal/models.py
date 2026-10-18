@@ -46,7 +46,7 @@ class StaffProfile(models.Model):
         if self.user_id and self.user.is_active:
             return "Active"
         if self.email and self.user_id:
-            return "Invited"
+            return "Awaiting password"
         if self.email:
             return "Ready to invite"
         return "Awaiting email"

@@ -272,3 +272,29 @@ staff addresses, configure an administrator and perform a separate production re
 `start.sh` selects the personal-owner bootstrap for production, and the fictional seed
 only for review mode. Never switch the hosted service before completing the production
 configuration and verification steps.
+
+## Registering staff without sending invitations
+
+An administrator can register confirmed work emails in Staff access, then share
+`/staff/login/` in a common welcome message. Staff choose **Set up my account** or
+**Forgot your password?**; both send a private, single-use setup link for a
+registered account that has no password yet. Existing active accounts use normal
+password recovery. Unknown, disabled and demo profiles receive no account email.
+Registration itself sends no emails, creates no shared passwords, and grants
+Employee access unless Finance is explicitly selected. Finance can review and
+download the team's timesheets; Employees can access only their own records.
+
+For an authorised batch, keep a JSON file outside version control, containing a
+fresh UUID `id`, the existing administrator's `owner_email`, and a `staff` list
+of `name`, `email`, `job_title` and `role` (`employee` or `finance`). An optional
+`previous_name` may match an unused placeholder with no email or linked user.
+Run `python manage.py register_staff --file /private/roster.json` to validate
+without saving, then repeat with `--apply`. Existing credentials and MFA are
+preserved. Conflicting, protected or disabled records abort the whole batch.
+
+On the dedicated service, a temporary private `STAFF_REGISTRATION_BATCH`
+environment variable can hold the same JSON. `start.sh` applies it after the
+existing owner is verified. Successful batches are recorded in the audit log and
+will not reapply on restarts. Clear this one variable after completion. Never
+replace the service's complete environment, add a roster to Git, or use this
+procedure against the original website. No database migration is needed.

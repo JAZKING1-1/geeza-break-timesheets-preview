@@ -116,7 +116,7 @@ def activate_account(request):
                     logger.warning("Account activation email could not be delivered.")
             return render(request, "staff_portal/message.html", {
                 "title": "Check your email",
-                "intro": "If this address has been invited and needs activation, we have sent a personal setup link. It works once and expires in 24 hours. If you already have a password, sign in or use password recovery."})
+                "intro": "If this address is registered and needs activation, we have sent a personal setup link. It works once and expires in 24 hours. If you already have a password, sign in or use password recovery."})
     return render(request, "staff_portal/auth_form.html", {
         "form": form, "title": "Set up your staff account",
         "intro": "Enter the work email your administrator has registered. We will email you a private link to choose your password.",
@@ -132,18 +132,19 @@ def reset_password(request):
         elif not verify_captcha(request, "reset"):
             form.add_error(None, "Verification was unsuccessful. Please try again.")
         else:
-            profile = StaffProfile.objects.filter(email__iexact=email, enabled=True,
-                                                  user__is_active=True).first()
+            profile = StaffProfile.objects.select_related("user").filter(
+                email__iexact=email, enabled=True, is_demo=False).first()
             if profile:
                 try:
-                    issue_link(profile, "reset")
+                    purpose = "reset" if profile.user_id and profile.user.is_active else "setup"
+                    issue_link(profile, purpose)
                 except Exception:
                     logger.warning("Password recovery email could not be delivered.")
             return render(request, "staff_portal/message.html", {
-                "title": "Check your email", "intro": "If this address belongs to an active account, a password reset link has been sent. It expires in one hour."})
+                "title": "Check your email", "intro": "If this email is registered for staff access, we have sent a private link to set or reset your password. Check your inbox and junk folder. The email tells you when the link expires."})
     return render(request, "staff_portal/auth_form.html", {
-        "form": form, "title": "Forgot your password?", "intro": "Enter the email address you use for work.",
-        "button": "Send reset link", "captcha_action": "reset"})
+        "form": form, "title": "Set or reset your password", "intro": "Enter your registered work email. This also works if you have not set a password yet.",
+        "button": "Email my password link", "captcha_action": "reset"})
 
 
 def password_link(request, token):

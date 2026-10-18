@@ -73,6 +73,12 @@
 .password-toggle:hover { background:#d1eef8; }
 .login-help .account-help { font-size:14px; margin:14px 0 0; }
 .download-saved-note { font-size:14px; color:#405963; }
+.gallowgate-photo { position:relative; margin:28px 0 24px; border-radius:20px; overflow:hidden; background:#d9edf0; }
+.gallowgate-building { display:block; width:100%; height:340px; object-fit:cover; object-position:center 62%; }
+.gallowgate-photo figcaption { position:absolute; bottom:16px; left:16px; right:16px; display:flex; align-items:center; gap:14px; padding:10px 16px; border-radius:12px; background:#fff; color:#17353f; box-shadow:0 3px 16px #17353f26; }
+.gallowgate-photo figcaption img { width:66px; height:66px; object-fit:contain; flex-shrink:0; }
+.gallowgate-photo figcaption span { font-size:18px; font-weight:700; line-height:1.4; }
+.gallowgate-photo figcaption small { display:block; font-size:14px; font-weight:400; margin-top:4px; }
 @media screen and (max-width:1100px) {
   .workflow-steps { gap:14px; }
   .stat-card>small { white-space:normal; }
@@ -113,6 +119,12 @@
   .welcome-panel h1 br { display:none; }
   .welcome-panel h1 span { display:block; }
   .welcome-panel .eyebrow { font-size:12px; }
+  .gallowgate-photo { margin:18px 0 0; border-radius:12px; }
+  .gallowgate-building { height:190px; object-position:center 60%; }
+  .gallowgate-photo figcaption { bottom:8px; left:8px; right:8px; gap:10px; padding:6px 10px; }
+  .gallowgate-photo figcaption img { width:48px; height:48px; }
+  .gallowgate-photo figcaption span { font-size:15px; }
+  .gallowgate-photo figcaption small { font-size:12px; margin-top:2px; }
   .topline .actions { gap:8px 16px; }
 }
 @media print {

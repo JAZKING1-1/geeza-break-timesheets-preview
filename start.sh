@@ -3,6 +3,9 @@ set -o errexit
 python manage.py migrate --noinput
 if [ "${APP_ENV:-local}" = "production" ] || [ "${APP_ENV:-local}" = "development" ]; then
   python manage.py bootstrap_owner
+  if [ -n "${STAFF_REGISTRATION_BATCH:-}" ]; then
+    python manage.py register_staff --from-env --apply
+  fi
 else
   python manage.py bootstrap_preview
 fi
