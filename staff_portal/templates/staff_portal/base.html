@@ -22,7 +22,8 @@
   <script id="turnstile-api" defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=portalTurnstileReady&amp;render=explicit"></script>
   {% endif %}
 </head>
-<body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}{% if portal_preview or portal_local %} with-banner{% endif %}">
+<body class="{% if portal_staff %}portal-shell{% else %}auth-shell{% endif %}{% if portal_preview or portal_local %} with-banner{% endif %} {% block body_class %}{% endblock %}">
+{% block page_background %}{% endblock %}
 <a class="skip" href="#main">Skip to content</a>
 {% if portal_preview %}<div class="local-banner preview-banner"><span class="local-dot"></span><strong>PRIVATE REVIEW</strong><span>Fictional data only · {% if notification_preview %}Emails are previews{% else %}Claim emails enabled{% endif %} · Demo may reset</span></div>{% elif portal_local %}<div class="local-banner"><span class="local-dot"></span><strong>LOCAL DEVELOPMENT</strong><span>Stored on this computer · {% if notification_preview %}Email delivery is off{% else %}Submission email enabled{% endif %}</span></div>{% endif %}
 {% if portal_staff %}

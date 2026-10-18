@@ -1,15 +1,14 @@
 {% extends "staff_portal/base.html" %}{% load static %}
 {% block title %}Welcome back{% endblock %}
+{% block body_class %}login-background-page{% endblock %}
+{% block page_background %}<div class="login-backdrop" aria-hidden="true"><img src="{% static 'staff_portal/gallowgate.jpg' %}" alt="" width="1131" height="1280" fetchpriority="high"></div>{% endblock %}
 {% block content %}
 <div class="login-layout">
   <section class="welcome-panel" aria-labelledby="welcome-heading">
     <span class="eyebrow">A SPACE FOR OUR TEAM</span>
     <h1 id="welcome-heading">Your shifts. <br>Your time. <br><span>All in one place.</span></h1>
     <p>A simpler way to record the work you do,<br class="desktop-only"> so you can get back to what matters.</p>
-    <figure class="gallowgate-photo">
-      <img class="gallowgate-building" src="{% static 'staff_portal/gallowgate.jpg' %}" alt="Geeza Break’s building on Gallowgate in Glasgow" width="1131" height="1280" fetchpriority="high">
-      <figcaption><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="80" height="80"><span>Here for our people.<small>Gallowgate · Glasgow</small></span></figcaption>
-    </figure>
+    <div class="welcome-location"><img src="{% static 'images/thumbnail_LOGO.png' %}" alt="Geeza Break" width="80" height="80"><span>Here for our people.<small>Gallowgate · Glasgow</small></span></div>
     <div class="welcome-foot"><span class="pill-dot"></span> Supporting families across Glasgow</div>
   </section>
   <section class="login-panel" aria-labelledby="login-heading">
