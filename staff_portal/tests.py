@@ -16,6 +16,7 @@ from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from .accounts import consume_link, issue_link, new_recovery_codes, verify_second_factor
+from .feedback import confirm_non_respite
 from .models import AuditEvent, PasswordLink, StaffProfile, TimeEntry, Timesheet, WorkCategory
 from .security import token_digest
 from .services import EditConflict, delete_entry, save_entry, transition
@@ -48,7 +49,9 @@ class PortalTests(TestCase):
 
     def add(self, **kwargs):
         self.sheet.refresh_from_db()
-        return save_entry(self.employee.user, self.sheet.pk, self.sheet.revision, self.entry(**kwargs))
+        entry = save_entry(self.employee.user, self.sheet.pk, self.sheet.revision, self.entry(**kwargs))
+        confirm_non_respite(self.sheet)  # Fictional non-respite fixture declaration.
+        return entry
 
     def submit(self):
         self.add()
@@ -146,6 +149,7 @@ class PortalTests(TestCase):
         item.break_minutes = 60
         save_entry(self.employee.user, sheet.pk, sheet.revision, item)
         sheet.refresh_from_db()
+        confirm_non_respite(sheet)
         sheet = transition(self.employee.user, sheet.pk, sheet.revision, "submit")
         sheet = transition(self.finance.user, sheet.pk, sheet.revision, "approve")
         self.assertEqual(sheet.total_minutes, 420)

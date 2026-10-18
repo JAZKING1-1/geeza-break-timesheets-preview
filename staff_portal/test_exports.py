@@ -8,6 +8,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .excel import XLSX_CONTENT_TYPE
+from .feedback import confirm_non_respite
 from .models import AuditEvent, StaffProfile, TimeEntry, Timesheet, WorkCategory
 from .services import save_entry, transition
 from .test_excel_notifications import workbook_cells
@@ -36,6 +37,7 @@ class DownloadTests(TestCase):
                           category=self.category, **kwargs)
         save_entry(sheet.staff.user, sheet.pk, sheet.revision, entry)
         sheet.refresh_from_db()
+        confirm_non_respite(sheet)
         return entry
 
     def approve(self, sheet):

@@ -13,16 +13,13 @@ and no demo login. Credentials and records are stored outside this repository.
 
 1. Open the staff portal on a phone, tablet or computer.
 2. Sign in with your registered work email and personal password.
-3. Choose **Add new timesheet** (or **Add work** in the navigation), select the first date you worked, then choose
-   **Continue to shifts**. An existing draft opens so you can continue it; an already
-   submitted month shows a clear explanation and a link to the claim. Use the date picker inside each shift.
-   For another month or year, expand **Different month or year?**, choose a date and
-   select **Open timesheet**. The matching sheet opens with that date in a new row.
-   Enter each shift in a horizontal
-   row with date, service / work type, start/finish, break and purpose. On a phone,
-   the same entries become labelled shift cards with large controls. Tablets can
-   scroll the horizontal grid. The saved total and save/submit controls follow the entries.
-4. Save a draft or submit the complete timesheet in one action.
+3. Choose **Add new timesheet**, select the first date worked, then choose **Continue to shifts**.
+   Every new claim is separate, so staff can submit several weekly claims in one month.
+   Enter each shift's date, times, unpaid break and service. Use separate claims for shifts in different months.
+4. **Save & continue to feedback**, then complete the session form for each respite shift.
+   For other work, explicitly confirm that no respite session took place. Save drafts
+   to finish later, then **Submit timesheet** when hours and feedback are complete.
+   See [the feedback source and access notes](FEEDBACK_FORM.md).
 5. An authorised finance reviewer can review, return or approve another employee's sheet.
 6. Download a saved timesheet as Excel, or print/save a PDF. Save draft before downloading new changes.
 7. Submission email status is displayed on the timesheet; email delivery must be configured.

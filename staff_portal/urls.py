@@ -1,5 +1,5 @@
 from django.urls import path
-from . import auth_views, views, preview, pwa
+from . import auth_views, views, preview, pwa, feedback_views
 
 app_name = "staff"
 urlpatterns = [
@@ -24,6 +24,7 @@ urlpatterns = [
     path("timesheets/<int:pk>/add/", views.entry, name="entry_add"),
     path("timesheets/<int:pk>/entries/<int:entry_id>/", views.entry, name="entry_edit"),
     path("timesheets/<int:pk>/entries/<int:entry_id>/remove/", views.remove_entry, name="entry_remove"),
+    path("timesheets/<int:pk>/entries/<int:entry_id>/feedback/", feedback_views.session_feedback, name="feedback"),
     path("reports/", views.reports, name="reports"),
     path("reports/export/", views.export_report, name="export_report"),
     path("reports/download/", views.export_workbooks, name="export_workbooks"),

@@ -177,6 +177,16 @@ class TimeEntry(models.Model):
         self.minutes = duration - self.break_minutes
 
 
+class SessionFeedback(models.Model):
+    """Private care feedback; never included in payroll exports or email snapshots."""
+    entry = models.OneToOneField(TimeEntry, on_delete=models.CASCADE, related_name="feedback")
+    schema_version = models.PositiveSmallIntegerField(default=1)
+    answers = models.JSONField(default=dict)
+    entry_fingerprint = models.CharField(max_length=64, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class AuditEvent(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     staff = models.ForeignKey(StaffProfile, null=True, on_delete=models.PROTECT)

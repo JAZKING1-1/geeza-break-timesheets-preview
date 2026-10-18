@@ -9,6 +9,7 @@ from django.utils import timezone
 from staff_portal.models import StaffProfile, TimeEntry, Timesheet, WorkCategory
 from staff_portal.services import save_entry, transition
 from staff_portal.service_catalog import sync_service_catalog
+from staff_portal.feedback import confirm_non_respite
 
 
 class Command(BaseCommand):
@@ -51,6 +52,7 @@ class Command(BaseCommand):
                     start_time=dt.time(9), end_time=dt.time(17), break_minutes=30,
                     category=category, notes="Fictional support shift for the review demo."))
             if status != "draft":
+                confirm_non_respite(sheet)
                 sheet = transition(profile.user, sheet.pk, 3, "submit", notify=False)
             if status == "approved":
                 transition(profiles["finance"].user, sheet.pk, sheet.revision, "approve")

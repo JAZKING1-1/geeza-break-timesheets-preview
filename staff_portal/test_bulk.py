@@ -40,7 +40,7 @@ class MonthlyEditorTests(TestCase):
         self.sheet.refresh_from_db()
         data = {"revision": self.sheet.revision if revision is None else revision, "action": action,
                 "rows-TOTAL_FORMS": len(rows), "rows-INITIAL_FORMS": self.sheet.entries.count(),
-                "rows-MAX_NUM_FORMS": 200}
+                "rows-MAX_NUM_FORMS": 200, "confirm_other_work": "on"}
         for index, row in enumerate(rows):
             data.update({f"rows-{index}-{key}": value for key, value in row.items()})
         return self.client.post(self.url, data)

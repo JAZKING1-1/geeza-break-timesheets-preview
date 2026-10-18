@@ -143,6 +143,8 @@ def submit_locked_sheet(actor, sheet, *, notify=True):
     from .notifications import queue_submission
     if not sheet.entries.exists():
         raise ValidationError("Add at least one shift before submitting.")
+    from .feedback import require_feedback
+    require_feedback(sheet)
     sheet.status = Timesheet.Status.SUBMITTED
     sheet.submitted_at = timezone.now()
     sheet.review_note = ""

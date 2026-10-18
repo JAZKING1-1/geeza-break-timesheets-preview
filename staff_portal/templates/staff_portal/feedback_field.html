@@ -1,0 +1,5 @@
+{% if field %}<div class="field">
+<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.completion_required and not field.field.disabled %}<span class="optional">Required to complete</span>{% endif %}</label>{{ field }}
+{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+{% if field.errors %}<ul class="field-errors" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+</div>{% endif %}

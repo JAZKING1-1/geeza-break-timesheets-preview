@@ -14,6 +14,7 @@ from django.urls import reverse
 
 from .bulk import RowErrors, save_month
 from .excel import submission_workbook
+from .feedback import confirm_non_respite
 from .models import AuditEvent, StaffProfile, TimeEntry, Timesheet, WorkCategory
 from .services import create_timesheet, save_entry, transition
 from .test_excel_notifications import workbook_cells
@@ -40,6 +41,7 @@ class MultipleTimesheetTests(TestCase):
                           start_time=dt.time(9), end_time=dt.time(11), break_minutes=0, category=self.category)
         save_entry(self.staff.user, sheet.pk, sheet.revision, entry)
         sheet.refresh_from_db()
+        confirm_non_respite(sheet)
         return entry
 
     def test_month_totals_filters_csv_and_zip_include_every_week(self):
@@ -125,7 +127,7 @@ class MultipleTimesheetTests(TestCase):
 class MultipleTimesheetMigrationTests(TransactionTestCase):
     def test_legacy_approved_record_and_history_survive_upgrade(self):
         old = [("staff_portal", "0004_submission_excel_snapshot")]
-        new = [("staff_portal", "0005_multiple_timesheets")]
+        new = [("staff_portal", "0006_sessionfeedback")]
         executor = MigrationExecutor(connection)
         executor.migrate(old)
         try:

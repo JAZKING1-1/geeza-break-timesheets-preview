@@ -17,6 +17,7 @@ from django.db import transaction
 from django.test import TestCase, override_settings
 
 from .excel import XLSX_CONTENT_TYPE, submission_workbook
+from .feedback import confirm_non_respite
 from .models import StaffProfile, SubmissionNotification, TimeEntry, Timesheet, WorkCategory
 from .notifications import deliver_notification, queue_submission
 from .services import save_entry, transition
@@ -54,8 +55,10 @@ class ExcelSubmissionTests(TestCase):
                                category=self.category, notes="Family support visit")
         save_entry(self.user, self.sheet.pk, 0, self.entry)
         self.sheet.refresh_from_db()
+        confirm_non_respite(self.sheet)
 
     def submit(self, execute=True):
+        confirm_non_respite(self.sheet)
         with self.captureOnCommitCallbacks(execute=execute):
             self.sheet = transition(self.user, self.sheet.pk, self.sheet.revision, "submit")
         return SubmissionNotification.objects.get(timesheet=self.sheet, revision=self.sheet.revision)
@@ -195,6 +198,7 @@ class ExcelSubmissionTests(TestCase):
         save_entry(self.user, sheet.pk, 0, entry)
         sheet.refresh_from_db()
         with self.captureOnCommitCallbacks(execute=False):
+            confirm_non_respite(sheet)
             sheet = transition(self.user, sheet.pk, sheet.revision, "submit")
         _, content = submission_workbook(sheet)
         cells, _, _ = workbook_cells(content)
